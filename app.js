@@ -103,10 +103,10 @@ function openPage(page) {
   if (page === "home") renderHome();
   if (page === "content") renderContent();
   if (page === "news") renderCollectionEditor("news", "newsPage", "Notícias", [
-    ["title", "Título"], ["content", "Conteúdo", "textarea"], ["imageUrl", "URL da imagem"], ["videoUrl", "URL do vídeo"], ["videoThumbUrl", "URL da miniatura do vídeo"],
+    ["title", "Título do vídeo"], ["videoName", "Nome do vídeo"], ["content", "Descrição", "textarea"], ["videoUrl", "URL do vídeo"], ["videoThumbUrl", "URL da miniatura"],
   ]);
   if (page === "conheca") renderCollectionEditor("conhecaUnila", "conhecaPage", "Conheça a Unila", [
-    ["title", "Título"], ["content", "Conteúdo", "textarea"], ["imageUrl", "URL da imagem"], ["videoUrl", "URL do vídeo"], ["videoThumbUrl", "URL da miniatura do vídeo"],
+    ["title", "Título do post"], ["videoName", "Nome do arquivo"], ["content", "Descrição", "textarea"], ["videoUrl", "URL do vídeo"], ["videoThumbUrl", "URL da miniatura"],
   ]);
   if (page === "users") renderUsers();
   if (page === "moderation") renderModeration();
@@ -165,11 +165,41 @@ function safeMediaUrl(value) {
   } catch { return ""; }
 }
 
+function recordVideoUrl(item) {
+  if (safeMediaUrl(item.videoUrl)) return item.videoUrl;
+  if (item.mediaType === "video" && safeMediaUrl(item.mediaUrl)) return item.mediaUrl;
+  return "";
+}
+
+function recordImageUrl(item) {
+  if (safeMediaUrl(item.imageUrl)) return item.imageUrl;
+  if (item.mediaType === "image" && safeMediaUrl(item.mediaUrl)) return item.mediaUrl;
+  return "";
+}
+
+function recordVideoLabel(item, index = 0) {
+  return String(item.title || item.videoName || item.videoTitle || item.caption || `Vídeo ${String(index + 1).padStart(2, "0")}`).trim();
+}
+
+function recordVideoName(item, index = 0) {
+  return String(item.videoName || item.videoTitle || `Arquivo ${String(index + 1).padStart(2, "0")}`).trim();
+}
+
 function renderMediaPreview(imageUrl, videoUrl) {
   const image = safeMediaUrl(imageUrl);
   const video = safeMediaUrl(videoUrl);
   if (!image && !video) return "<div class=\"muted\">Nenhuma mídia informada.</div>";
   return `${image ? `<img src="${esc(image)}" alt="Pré-visualização da imagem" loading="lazy">` : ""}${video ? `<video src="${esc(video)}" controls preload="metadata"></video>` : ""}<a href="${esc(image || video)}" target="_blank" rel="noopener">Abrir mídia em nova aba</a>`;
+}
+
+function renderVideoListItem(item, index = 0) {
+  const video = safeMediaUrl(recordVideoUrl(item));
+  const image = safeMediaUrl(recordImageUrl(item));
+  const poster = safeMediaUrl(item.videoThumbUrl);
+  const title = recordVideoLabel(item, index);
+  const name = recordVideoName(item, index);
+  const preview = video ? `<video src="${esc(video)}"${poster ? ` poster="${esc(poster)}"` : ""} controls preload="metadata" playsinline></video>` : image ? `<img src="${esc(image)}" alt="${esc(title)}" loading="lazy">` : "<div class=\"video-missing\">Sem mídia</div>";
+  return `<div class="video-list-item">${preview}<div class="video-list-info"><strong>${esc(title)}</strong><small>${esc(name)}</small></div></div>`;
 }
 
 async function uploadMediaFile(file) {
@@ -275,14 +305,16 @@ async function renderCollectionEditor(collectionName, sectionId, title, fields) 
   const section = $(sectionId);
   section.innerHTML = `
     <div class="grid">
-      <div class="card"><h3>${title} <span class="muted">${items.length}</span></h3><div class="list">${items.map((item) => `
-        <button class="row" data-id="${esc(item.id)}" type="button"><span><strong>${esc(item.title || item.id)}</strong><small>${esc(item.content || "")}</small></span>›</button>`).join("") || '<div class="empty">Nenhum registro.</div>'}</div></div>
-      <div class="card"><h3>Editar registro</h3><form id="recordForm"><label for="recordId">ID</label><input id="recordId" placeholder="vazio para criar"><div>${fields.map(([key, label, type]) => `<label for="f_${key}">${label}</label>${type === "textarea" ? `<textarea id="f_${key}"></textarea>` : `<input id="f_${key}">`}`).join("")}</div><div class="upload-row"><label for="imageFile">Enviar imagem</label><input id="imageFile" type="file" accept="image/*"><small class="muted">Até 10 MB. A URL será preenchida automaticamente.</small></div><div class="upload-row"><label for="videoFile">Enviar vídeo</label><input id="videoFile" type="file" accept="video/mp4,video/webm,video/quicktime"><small class="muted">Até 120 MB. A URL será preenchida automaticamente.</small></div><div class="upload-row"><label for="videoThumbFile">Enviar miniatura do vídeo</label><input id="videoThumbFile" type="file" accept="image/*"><small class="muted">Opcional; preenche a URL da miniatura.</small></div><div id="mediaPreview" class="media-preview hidden"></div><div class="actions"><button class="button primary-button">Salvar</button><button type="button" id="deleteCurrent" class="button danger-button hidden">Excluir</button><button type="button" id="clearCurrent" class="button">Limpar</button></div></form></div>
+      <div class="card"><h3>${title} <span class="muted">${items.length}</span></h3><div class="video-list">${items.map((item, index) => `<div class="video-row" data-id="${esc(item.id)}" role="button" tabindex="0">${renderVideoListItem(item, index)}</div>`).join("") || '<div class="empty">Nenhum vídeo cadastrado.</div>'}</div></div>
+      <div class="card"><h3>Vídeo</h3><p class="muted">Selecione um vídeo na lista ou envie um novo. Informe somente o título e o nome.</p><form id="recordForm"><input id="recordId" type="hidden"><div>${fields.map(([key, label, type]) => `<label for="f_${key}">${label}</label>${type === "textarea" ? `<textarea id="f_${key}"></textarea>` : `<input id="f_${key}">`}`).join("")}</div><div class="upload-row"><label for="videoFile">Enviar vídeo</label><input id="videoFile" type="file" accept="video/mp4,video/webm,video/quicktime"><small class="muted">Até 120 MB. O nome do arquivo será preenchido automaticamente.</small></div><div class="upload-row"><label for="videoThumbFile">Enviar miniatura (opcional)</label><input id="videoThumbFile" type="file" accept="image/*"><small class="muted">A URL será preenchida automaticamente.</small></div><div id="mediaPreview" class="media-preview hidden"></div><div class="actions"><button class="button primary-button">Salvar vídeo</button><button type="button" id="deleteCurrent" class="button danger-button hidden">Excluir</button><button type="button" id="clearCurrent" class="button">Limpar</button></div></form></div>
     </div>`;
 
   items.forEach((item) => section.querySelector(`[data-id="${CSS.escape(item.id)}"]`)?.addEventListener("click", () => {
     $("recordId").value = item.id;
-    fields.forEach(([key]) => { $(`f_${key}`).value = item[key] || ""; });
+    fields.forEach(([key]) => {
+      const value = key === "title" ? (item.title || item.caption || "") : key === "videoUrl" ? (item.videoUrl || (item.mediaType === "video" ? item.mediaUrl : "")) : key === "videoName" ? recordVideoName(item) : item[key];
+      $(`f_${key}`).value = value || "";
+    });
     updateMediaPreview();
     $("deleteCurrent").classList.remove("hidden");
   }));
@@ -295,7 +327,7 @@ async function renderCollectionEditor(collectionName, sectionId, title, fields) 
     preview.classList.toggle("hidden", !safeMediaUrl(image) && !safeMediaUrl(video));
   }
   [$("f_imageUrl"), $("f_videoUrl"), $("f_videoThumbUrl")].filter(Boolean).forEach((field) => field.addEventListener("input", updateMediaPreview));
-  async function bindUpload(inputId, targetId) {
+  async function bindUpload(inputId, targetId, nameTargetId = "") {
     const input = $(inputId);
     if (!input || !$(targetId)) return;
     input.addEventListener("change", async () => {
@@ -305,6 +337,7 @@ async function renderCollectionEditor(collectionName, sectionId, title, fields) 
       try {
         showStatus("Enviando mídia...", true);
         $(targetId).value = await uploadMediaFile(file);
+        if (nameTargetId && $(nameTargetId) && !$(nameTargetId).value.trim()) $(nameTargetId).value = file.name;
         updateMediaPreview();
         showStatus("Mídia enviada. Revise e clique em Salvar.", true);
       } catch (error) {
@@ -312,13 +345,13 @@ async function renderCollectionEditor(collectionName, sectionId, title, fields) 
       } finally { input.disabled = false; }
     });
   }
-  bindUpload("imageFile", "f_imageUrl");
-  bindUpload("videoFile", "f_videoUrl");
+  bindUpload("videoFile", "f_videoUrl", "f_videoName");
   bindUpload("videoThumbFile", "f_videoThumbUrl");
   $("recordForm").addEventListener("submit", async (event) => {
     event.preventDefault();
     const id = $("recordId").value.trim() || crypto.randomUUID();
     const data = Object.fromEntries(fields.map(([key]) => [key, $(`f_${key}`).value.trim()]));
+    if (collectionName === "conhecaUnila") data.caption = data.title || "";
     if (collectionName === "news") { data.timestamp = serverTimestamp(); data.createdAt = serverTimestamp(); }
     await saveRecord(collectionName, id, data);
   });
