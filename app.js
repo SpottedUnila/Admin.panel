@@ -45,6 +45,30 @@ const CONTENT_KEYS = [
   "internet", "estude", "auxilio_estudantil", "saude_mental", "enem", "grupo_facebook",
   "noticias", "upa",
 ];
+const DEFAULT_CONTENT = {
+  portal_unila: "https://portal.unila.edu.br/",
+  inscreva: "https://inscreva.unila.edu.br/",
+  sigaa: "https://sig.unila.edu.br/sigaa/verTelaLogin.do",
+  email: "https://mail.google.com/",
+  google: "https://www.google.com/",
+  instagram: "https://www.instagram.com/instaunila/",
+  facebook: "https://www.facebook.com/unila.oficial",
+  biblioteca: "https://portal.unila.edu.br/biblioteca",
+  intercampi: "https://portal.unila.edu.br/proagi/delog/arquivos/horario-intercampi/quadro-de-horario-intercampi.pdf",
+  editais: "https://documentos.unila.edu.br/",
+  emergencia: "Polícia Militar: 190\nSAMU (Ambulância): 192\nBombeiros: 193\n\nHospital Municipal: (45) 2105-4100\nGuarda Municipal: (45) 2105-5100\nDelegacia da Mulher: (45) 3521-9200\nDefesa Civil: 199",
+  enderecos: "Unila - Campus PTI\nAv. Tancredo Neves, 6731 - PTI, Foz do Iguaçu - PR\n\nUnila - Campus Juarez Távora\nAv. Silvio Américo Sasdelli, 1000 - Vila A, Foz do Iguaçu - PR\n\nUnila - Campus Jardim Universitário (JU)\nAv. Tarquínio Joslin dos Santos, 1000 - Lot. Universitário das Américas, Foz do Iguaçu - PR\n\nUnila - Campus Integração\nAv. Tancredo Neves, 3147 - Foz do Iguaçu - PR",
+  ru: "RU PTI: Segunda a Sexta (11:00 - 14:00 e 17:30 - 20:00)\nRU JU: Segunda a Sexta (11:00 - 14:00 e 17:30 - 20:00)\n\nPreço para Estudantes: R$ 3,50\nPreço para Servidores: R$ 12,00",
+  dev: "Equipe Spotted Unila\nContato: universecreativepixel@gmail.com",
+  internet: "Rede: Unila-WIFI\nLogin: Seu CPF ou E-mail Institucional\nSenha: A mesma senha do SIGAA",
+  estude: "Ingresso para Brasileiros: Via ENEM/SISU\nIngresso para Estrangeiros: Seleção Internacional Própria\n\nCursos: Mais de 29 opções de graduação.\n\nMais informações: portal.unila.edu.br/ingresso",
+  auxilio_estudantil: "https://portal.unila.edu.br/prae/assistencia-estudantil/auxilios",
+  saude_mental: "https://portal.unila.edu.br/saude-mental",
+  enem: "https://enem.inep.gov.br/participante/",
+  grupo_facebook: "https://www.facebook.com/groups/unila/",
+  noticias: "https://portal.unila.edu.br/noticias",
+  upa: "UPA João Samek (Vila A): (45) 3524-8800\nUPA Morumbi: (45) 3521-1350\n\nEm emergências, ligue 192 (SAMU).",
+};
 
 const app = initializeApp(FIREBASE_CONFIG);
 const auth = getAuth(app);
@@ -249,7 +273,7 @@ async function renderContent() {
     ["academicGoals", "Meta Acadêmica", "academicGoals"], ["auxilio_estudantil", "Auxílio Estudantil", "studentAid"], ["saude_mental", "Saúde Mental", "mentalHealth"],
     ["enem", "ENEM", "enem"], ["noticias", "Notícias", "news"], ["conheca", "Conheça a Unila", "conheca"],
     ["desapega", "Achados e Perdidos e Desapega", "desapega"], ["upa", "Hospitais de Emergência 24h (UPA)", "upa"],
-  ];
+  ].filter(([key]) => CONTENT_KEYS.includes(key));
   const languageNames = { pt: "Português", fr: "Français", es: "Español" };
   const selectedKey = { value: buttons[0][0] };
   const selectedLanguage = { value: "pt" };
@@ -268,7 +292,7 @@ async function renderContent() {
         <select id="contentLanguage">${Object.entries(languageNames).map(([id, name]) => `<option value="${id}">${name}</option>`).join("")}</select>
         <label for="contentLabel">Texto exibido no botão</label>
         <input id="contentLabel">
-        <label for="contentValue">Conteúdo completo</label>
+        <label for="contentValue">Conteúdo ou link do botão</label>
         <textarea id="contentValue" rows="12"></textarea>
         <div class="actions"><button id="saveButtonContent" class="button primary-button" type="button">Salvar botão</button><button id="clearContent" class="button" type="button">Limpar</button></div>
         <p class="muted" style="margin-bottom:0">Os IDs técnicos ficam ocultos e são gerenciados automaticamente.</p>
@@ -295,8 +319,9 @@ async function renderContent() {
     }));
     if (selection !== `${selectedKey.value}:${selectedLanguage.value}`) return;
     const [labelRecord, contentRecord] = records;
-    $("contentLabel").value = String(labelRecord?.value ?? fallbackLabel);
-    $("contentValue").value = valueForEditor(contentRecord?.value ?? "");
+    const savedContent = String(contentRecord?.value ?? "");
+    $("contentLabel").value = String(labelRecord?.value || fallbackLabel);
+    $("contentValue").value = valueForEditor(savedContent.trim() ? savedContent : (DEFAULT_CONTENT[key] || ""));
     $("contentLanguage").value = selectedLanguage.value;
   }
   function drawList() {
