@@ -131,7 +131,7 @@ function openPage(page) {
     ["title", "Título do vídeo"], ["videoName", "Nome do vídeo"], ["content", "Descrição", "textarea"], ["videoUrl", "URL do vídeo"], ["videoThumbUrl", "URL da miniatura"],
   ]);
   if (page === "conheca") renderCollectionEditor("conhecaUnila", "conhecaPage", "Conheça a Unila", [
-    ["title", "Título do post"], ["videoName", "Nome do arquivo"], ["content", "Descrição", "textarea"], ["videoUrl", "URL do vídeo"], ["videoThumbUrl", "URL da miniatura"],
+    ["title", "Título do post"], ["videoName", "Nome do arquivo"], ["content", "Descrição", "textarea"], ["imageUrl", "URL da imagem"], ["videoUrl", "URL do vídeo"], ["videoThumbUrl", "URL da miniatura"],
   ]);
   if (page === "users") renderUsers();
   if (page === "moderation") renderModeration();
@@ -356,10 +356,11 @@ async function renderContent() {
 async function renderCollectionEditor(collectionName, sectionId, title, fields) {
   const items = await readCollection(collectionName);
   const section = $(sectionId);
+  const imageUpload = collectionName === "conhecaUnila" ? `<div class="upload-row"><label for="imageFile">Enviar imagem</label><input id="imageFile" type="file" accept="image/*"><small class="muted">Selecione uma imagem de até 10 MB. Ela será enviada primeiro e a URL será preenchida automaticamente.</small></div>` : "";
   section.innerHTML = `
     <div class="grid">
-      <div class="card"><h3>${title} <span class="muted">${items.length}</span></h3><div class="video-list">${items.map((item, index) => `<div class="video-row" data-id="${esc(item.id)}" role="button" tabindex="0">${renderVideoListItem(item, index)}</div>`).join("") || '<div class="empty">Nenhum vídeo cadastrado.</div>'}</div></div>
-      <div class="card"><h3>Editar ${collectionName === "conhecaUnila" ? "post" : "notícia"}</h3><p class="muted">Toque em um item para editar. Informe o título e o nome do arquivo.</p><form id="recordForm"><input id="recordId" type="hidden"><div>${fields.map(([key, label, type]) => `<label for="f_${key}">${label}</label>${type === "textarea" ? `<textarea id="f_${key}"></textarea>` : `<input id="f_${key}">`}`).join("")}</div><div class="upload-row"><label for="videoFile">Enviar vídeo</label><input id="videoFile" type="file" accept="video/mp4,video/webm,video/quicktime"><small class="muted">Até 120 MB. O nome do arquivo será preenchido automaticamente.</small></div><div class="upload-row"><label for="videoThumbFile">Enviar miniatura (opcional)</label><input id="videoThumbFile" type="file" accept="image/*"><small class="muted">A URL será preenchida automaticamente.</small></div><div id="mediaPreview" class="media-preview hidden"></div><div class="actions"><button class="button primary-button">Salvar alterações</button><button type="button" id="deleteCurrent" class="button danger-button hidden">Excluir</button><button type="button" id="clearCurrent" class="button">Limpar</button></div></form></div>
+      <div class="card"><h3>${title} <span class="muted">${items.length}</span></h3><div class="video-list">${items.map((item, index) => `<div class="video-row" data-id="${esc(item.id)}" role="button" tabindex="0">${renderVideoListItem(item, index)}</div>`).join("") || '<div class="empty">Nenhum vídeo ou imagem cadastrado.</div>'}</div></div>
+      <div class="card"><h3>Editar ${collectionName === "conhecaUnila" ? "post" : "notícia"}</h3><p class="muted">Para Conheça a Unila, selecione a imagem e toque em Enviar no topo. Depois revise e salve.</p><form id="recordForm"><input id="recordId" type="hidden"><div class="actions form-top-actions"><button class="button primary-button" type="submit">Enviar</button></div><div>${fields.map(([key, label, type]) => `<label for="f_${key}">${label}</label>${type === "textarea" ? `<textarea id="f_${key}"></textarea>` : `<input id="f_${key}">`}`).join("")}</div>${imageUpload}<div class="upload-row"><label for="videoFile">Enviar vídeo</label><input id="videoFile" type="file" accept="video/mp4,video/webm,video/quicktime"><small class="muted">Até 120 MB. O nome do arquivo será preenchido automaticamente.</small></div><div class="upload-row"><label for="videoThumbFile">Enviar miniatura (opcional)</label><input id="videoThumbFile" type="file" accept="image/*"><small class="muted">A URL será preenchida automaticamente.</small></div><div id="mediaPreview" class="media-preview hidden"></div><div class="actions"><button type="button" id="deleteCurrent" class="button danger-button hidden">Excluir</button><button type="button" id="clearCurrent" class="button">Limpar</button></div></form></div>
     </div>`;
 
   items.forEach((item) => section.querySelector(`[data-id="${CSS.escape(item.id)}"]`)?.addEventListener("click", () => {
@@ -407,6 +408,7 @@ async function renderCollectionEditor(collectionName, sectionId, title, fields) 
       } finally { input.disabled = false; }
     });
   }
+  if (collectionName === "conhecaUnila") bindUpload("imageFile", "f_imageUrl");
   bindUpload("videoFile", "f_videoUrl", "f_videoName");
   bindUpload("videoThumbFile", "f_videoThumbUrl");
   $("recordForm").addEventListener("submit", async (event) => {
