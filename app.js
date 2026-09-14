@@ -88,6 +88,7 @@ function openPage(page) {
     content: ["Textos e botões", "IDs button_label_* e button_content_* em PT, FR e ES."],
     news: ["Notícias", "Publicações exibidas no aplicativo."],
     conheca: ["Conheça a Unila", "Publicações da coleção conhecaUnila."],
+    users: ["Usuários", "Visualize usuários, nicks e bloqueios globais."],
     moderation: ["Moderação", "Bloqueios e denúncias."],
   };
   state.currentPage = page;
@@ -100,11 +101,12 @@ function openPage(page) {
   if (page === "home") renderHome();
   if (page === "content") renderContent();
   if (page === "news") renderCollectionEditor("news", "newsPage", "Notícias", [
-    ["title", "Título"], ["content", "Conteúdo", "textarea"], ["imageUrl", "URL da imagem"], ["videoUrl", "URL do vídeo"],
+    ["title", "Título"], ["content", "Conteúdo", "textarea"], ["imageUrl", "URL da imagem"], ["videoUrl", "URL do vídeo"], ["videoThumbUrl", "URL da miniatura do vídeo"],
   ]);
   if (page === "conheca") renderCollectionEditor("conhecaUnila", "conhecaPage", "Conheça a Unila", [
-    ["title", "Título"], ["content", "Conteúdo", "textarea"], ["imageUrl", "URL da imagem"], ["videoUrl", "URL do vídeo"],
+    ["title", "Título"], ["content", "Conteúdo", "textarea"], ["imageUrl", "URL da imagem"], ["videoUrl", "URL do vídeo"], ["videoThumbUrl", "URL da miniatura do vídeo"],
   ]);
+  if (page === "users") renderUsers();
   if (page === "moderation") renderModeration();
 }
 
@@ -151,6 +153,20 @@ async function removeRecord(name, id) {
 
 function valueForEditor(value) {
   return typeof value === "object" ? JSON.stringify(value, null, 2) : String(value ?? "");
+}
+
+function safeMediaUrl(value) {
+  try {
+    const url = new URL(String(value || ""));
+    return ["http:", "https:"].includes(url.protocol) ? url.href : "";
+  } catch { return ""; }
+}
+
+function renderMediaPreview(imageUrl, videoUrl) {
+  const image = safeMediaUrl(imageUrl);
+  const video = safeMediaUrl(videoUrl);
+  if (!image && !video) return "<div class=\"muted\">Nenhuma mídia informada.</div>";
+  return `${image ? `<img src="${esc(image)}" alt="Pré-visualização da imagem" loading="lazy">` : ""}${video ? `<video src="${esc(video)}" controls preload="metadata"></video>` : ""}<a href="${esc(image || video)}" target="_blank" rel="noopener">Abrir mídia em nova aba</a>`;
 }
 
 async function renderContent() {
@@ -215,14 +231,24 @@ async function renderCollectionEditor(collectionName, sectionId, title, fields) 
     <div class="grid">
       <div class="card"><h3>${title} <span class="muted">${items.length}</span></h3><div class="list">${items.map((item) => `
         <button class="row" data-id="${esc(item.id)}" type="button"><span><strong>${esc(item.title || item.id)}</strong><small>${esc(item.content || "")}</small></span>›</button>`).join("") || '<div class="empty">Nenhum registro.</div>'}</div></div>
-      <div class="card"><h3>Editar registro</h3><form id="recordForm"><label for="recordId">ID</label><input id="recordId" placeholder="vazio para criar"><div>${fields.map(([key, label, type]) => `<label for="f_${key}">${label}</label>${type === "textarea" ? `<textarea id="f_${key}"></textarea>` : `<input id="f_${key}">`}`).join("")}</div><div class="actions"><button class="button primary-button">Salvar</button><button type="button" id="deleteCurrent" class="button danger-button hidden">Excluir</button><button type="button" id="clearCurrent" class="button">Limpar</button></div></form></div>
+      <div class="card"><h3>Editar registro</h3><form id="recordForm"><label for="recordId">ID</label><input id="recordId" placeholder="vazio para criar"><div>${fields.map(([key, label, type]) => `<label for="f_${key}">${label}</label>${type === "textarea" ? `<textarea id="f_${key}"></textarea>` : `<input id="f_${key}">`}`).join("")}</div><div id="mediaPreview" class="media-preview hidden"></div><div class="actions"><button class="button primary-button">Salvar</button><button type="button" id="deleteCurrent" class="button danger-button hidden">Excluir</button><button type="button" id="clearCurrent" class="button">Limpar</button></div></form></div>
     </div>`;
 
   items.forEach((item) => section.querySelector(`[data-id="${CSS.escape(item.id)}"]`)?.addEventListener("click", () => {
     $("recordId").value = item.id;
     fields.forEach(([key]) => { $(`f_${key}`).value = item[key] || ""; });
+    updateMediaPreview();
     $("deleteCurrent").classList.remove("hidden");
   }));
+  function updateMediaPreview() {
+    const preview = $("mediaPreview");
+    if (!preview) return;
+    const image = $("f_imageUrl")?.value;
+    const video = $("f_videoUrl")?.value;
+    preview.innerHTML = renderMediaPreview(image, video);
+    preview.classList.toggle("hidden", !safeMediaUrl(image) && !safeMediaUrl(video));
+  }
+  [$("f_imageUrl"), $("f_videoUrl")].filter(Boolean).forEach((field) => field.addEventListener("input", updateMediaPreview));
   $("recordForm").addEventListener("submit", async (event) => {
     event.preventDefault();
     const id = $("recordId").value.trim() || crypto.randomUUID();
@@ -235,6 +261,45 @@ async function renderCollectionEditor(collectionName, sectionId, title, fields) 
     if (id) removeRecord(collectionName, id);
   });
   $("clearCurrent").addEventListener("click", () => openPage(state.currentPage));
+}
+
+async function renderUsers() {
+  const [users, bans] = await Promise.all([readCollection("users"), readCollection("bannedUsers")]);
+  const bannedById = Object.fromEntries(bans.map((item) => [item.id, item]));
+  $("usersPage").innerHTML = `
+    <div class="grid">
+      <div class="card"><h3>Usuários registrados <span class="muted">${users.length}</span></h3><input id="userSearch" placeholder="Filtrar por nick ou UID" aria-label="Filtrar usuários"><div id="userList" class="list" style="margin-top:10px"></div></div>
+      <div class="card"><h3>Bloqueio global</h3><p class="muted">O bloqueio usa o Firebase UID como ID e é aplicado pelo aplicativo em tempo real.</p><form id="userBanForm"><label for="userUid">UID do usuário</label><input id="userUid" required><label for="userNick">Nick de referência</label><input id="userNick"><label for="userBanReason">Motivo</label><textarea id="userBanReason"></textarea><div class="actions"><button class="button danger-button">Bloquear usuário</button><button type="button" id="unbanButton" class="button">Desbloquear UID</button></div></form></div>
+    </div>`;
+
+  const drawUsers = () => {
+    const search = $("userSearch").value.toLowerCase();
+    const visible = users.filter((user) => `${user.id} ${user.uid || ""} ${user.nick || ""} ${user.email || ""}`.toLowerCase().includes(search));
+    $("userList").innerHTML = visible.map((user) => {
+      const uid = String(user.uid || user.ownerUid || user.id);
+      const ban = bannedById[uid];
+      return `<button class="row" type="button" data-uid="${esc(uid)}" data-nick="${esc(user.nick || "")}"><span><strong>${esc(user.nick || user.id)}</strong><small>UID: ${esc(uid)}${ban?.banned || ban?.blocked ? " · BLOQUEADO" : ""}</small></span>›</button>`;
+    }).join("") || '<div class="empty">Nenhum usuário encontrado.</div>';
+    document.querySelectorAll("#userList .row").forEach((row) => row.addEventListener("click", () => {
+      $("userUid").value = row.dataset.uid;
+      $("userNick").value = row.dataset.nick;
+      $("userBanReason").value = bannedById[row.dataset.uid]?.reason || "";
+    }));
+  };
+  $("userSearch").addEventListener("input", drawUsers);
+  $("userBanForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const uid = $("userUid").value.trim();
+    if (!uid) return;
+    await saveRecord("bannedUsers", uid, { uid, nick: $("userNick").value.trim(), reason: $("userBanReason").value.trim(), banned: true, blocked: true, updatedAt: serverTimestamp() });
+  });
+  $("unbanButton").addEventListener("click", async () => {
+    const uid = $("userUid").value.trim();
+    if (!uid) { showStatus("Informe o UID para desbloquear."); return; }
+    if (bannedById[uid]) await removeRecord("bannedUsers", uid);
+    else showStatus("Este UID não possui bloqueio registrado.");
+  });
+  drawUsers();
 }
 
 async function renderModeration() {
