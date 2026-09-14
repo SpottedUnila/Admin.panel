@@ -168,6 +168,11 @@ function valueForEditor(value) {
   return typeof value === "object" ? JSON.stringify(value, null, 2) : String(value ?? "");
 }
 
+function scrollToEditor(selector) {
+  const target = document.querySelector(selector);
+  if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 function safeMediaUrl(value) {
   try {
     const url = new URL(String(value || ""));
@@ -209,7 +214,7 @@ function renderVideoListItem(item, index = 0) {
   const title = recordVideoLabel(item, index);
   const name = recordVideoName(item, index);
   const preview = video ? `<video src="${esc(video)}"${poster ? ` poster="${esc(poster)}"` : ""} controls preload="metadata" playsinline></video>` : image ? `<img src="${esc(image)}" alt="${esc(title)}" loading="lazy">` : "<div class=\"video-missing\">Sem mídia</div>";
-  return `<div class="video-list-item">${preview}<div class="video-list-info"><strong>${esc(title)}</strong><small>${esc(name)}</small><span class="edit-hint">Editar</span><button class="button danger-button inline-delete" type="button" data-delete-id="${esc(item.id)}">Excluir</button></div></div>`;
+  return `<div class="video-list-item">${preview}<div class="video-list-info"><strong>${esc(title)}</strong><small>${esc(name)}</small><button class="button edit-item" type="button" data-edit-id="${esc(item.id)}">Editar</button><button class="button danger-button inline-delete" type="button" data-delete-id="${esc(item.id)}">Excluir</button></div></div>`;
 }
 
 async function uploadMediaFile(file) {
@@ -256,7 +261,7 @@ async function renderContent() {
         <input id="contentSearch" placeholder="Filtrar botões" aria-label="Filtrar botões">
         <div id="contentList" class="list" style="margin-top:10px"></div>
       </div>
-      <div class="card">
+      <div class="card content-editor-card">
         <h3>Editar botão</h3>
         <p class="muted">Cada botão aparece uma única vez. O rótulo e o conteúdo completo são salvos juntos.</p>
         <label for="contentLanguage">Idioma</label>
@@ -301,7 +306,7 @@ async function renderContent() {
     document.querySelectorAll("#contentList .row").forEach((row) => row.addEventListener("click", () => {
       selectedKey.value = row.dataset.key;
       drawList();
-      void loadEditor();
+      void loadEditor().then(() => scrollToEditor("#contentPage .content-editor-card"));
     }));
   }
   $("contentSearch").addEventListener("input", drawList);
@@ -340,6 +345,11 @@ async function renderCollectionEditor(collectionName, sectionId, title, fields) 
     });
     updateMediaPreview();
     $("deleteCurrent").classList.remove("hidden");
+  }));
+  section.querySelectorAll(".edit-item").forEach((button) => button.addEventListener("click", (event) => {
+    event.stopPropagation();
+    section.querySelector(`[data-id="${CSS.escape(button.dataset.editId)}"]`)?.click();
+    scrollToEditor(`#${sectionId} form`);
   }));
   section.querySelectorAll(".inline-delete").forEach((button) => button.addEventListener("click", (event) => {
     event.stopPropagation();
