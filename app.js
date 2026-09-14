@@ -209,7 +209,7 @@ function renderVideoListItem(item, index = 0) {
   const title = recordVideoLabel(item, index);
   const name = recordVideoName(item, index);
   const preview = video ? `<video src="${esc(video)}"${poster ? ` poster="${esc(poster)}"` : ""} controls preload="metadata" playsinline></video>` : image ? `<img src="${esc(image)}" alt="${esc(title)}" loading="lazy">` : "<div class=\"video-missing\">Sem mídia</div>";
-  return `<div class="video-list-item">${preview}<div class="video-list-info"><strong>${esc(title)}</strong><small>${esc(name)}</small><button class="button danger-button inline-delete" type="button" data-delete-id="${esc(item.id)}">Excluir</button></div></div>`;
+  return `<div class="video-list-item">${preview}<div class="video-list-info"><strong>${esc(title)}</strong><small>${esc(name)}</small><span class="edit-hint">Editar</span><button class="button danger-button inline-delete" type="button" data-delete-id="${esc(item.id)}">Excluir</button></div></div>`;
 }
 
 async function uploadMediaFile(file) {
@@ -233,17 +233,17 @@ async function renderContent() {
   const items = await readKnownContent();
   state.cache = Object.fromEntries(items.map((item) => [item.id, item]));
   const buttons = [
-    ["portal_unila", "Portal Oficial da Unila"], ["inscreva", "Portal Inscreva"],
-    ["sigaa", "Sistema Acadêmico SIGAA"], ["email", "E-mail Institucional"],
-    ["google", "Pesquisa Google"], ["instagram", "Instagram Unila"], ["facebook", "Facebook Unila"],
-    ["biblioteca", "Biblioteca Unila"], ["intercampi", "Transporte Intercampi"], ["editais", "Editais Oficiais"],
-    ["emergencia", "Telefones de Emergência"], ["enderecos", "Endereços dos Campus"],
-    ["ru", "Restaurantes Universitários"], ["grupo_facebook", "Grupo no Facebook"],
-    ["dev", "Desenvolvedor"], ["privacy", "Privacidade e exclusão"], ["notes", "Anotações"],
-    ["share", "Compartilhar App"], ["internet", "Internet Unila"], ["estude", "Estude na Unila"],
-    ["academicGoals", "Meta Acadêmica"], ["studentAid", "Auxílio Estudantil"], ["mentalHealth", "Saúde Mental"],
-    ["enem", "ENEM"], ["news", "Notícias"], ["conheca", "Conheça a Unila"],
-    ["desapega", "Achados e Perdidos e Desapega"], ["upa", "Hospitais de Emergência 24h (UPA)"],
+    ["portal_unila", "Portal Oficial da Unila", "portal"], ["inscreva", "Portal Inscreva", "inscreva"],
+    ["sigaa", "Sistema Acadêmico SIGAA", "sigaa"], ["email", "E-mail Institucional", "email"],
+    ["google", "Pesquisa Google", "google"], ["instagram", "Instagram Unila", "instagram"], ["facebook", "Facebook Unila", "facebook"],
+    ["biblioteca", "Biblioteca Unila", "library"], ["intercampi", "Transporte Intercampi", "intercampus"], ["editais", "Editais Oficiais", "notices"],
+    ["emergencia", "Telefones de Emergência", "emergency"], ["enderecos", "Endereços dos Campus", "addresses"],
+    ["ru", "Restaurantes Universitários", "ru"], ["grupo_facebook", "Grupo no Facebook", "group"],
+    ["dev", "Desenvolvedor", "developer"], ["privacy", "Privacidade e exclusão", "privacy"], ["notes", "Anotações", "notes"],
+    ["share", "Compartilhar App", "share"], ["internet", "Internet Unila", "internet"], ["estude", "Estude na Unila", "study"],
+    ["academicGoals", "Meta Acadêmica", "academicGoals"], ["auxilio_estudantil", "Auxílio Estudantil", "studentAid"], ["saude_mental", "Saúde Mental", "mentalHealth"],
+    ["enem", "ENEM", "enem"], ["noticias", "Notícias", "news"], ["conheca", "Conheça a Unila", "conheca"],
+    ["desapega", "Achados e Perdidos e Desapega", "desapega"], ["upa", "Hospitais de Emergência 24h (UPA)", "upa"],
   ];
   const languageNames = { pt: "Português", fr: "Français", es: "Español" };
   const selectedKey = { value: buttons[0][0] };
@@ -270,15 +270,28 @@ async function renderContent() {
       </div>
     </div>`;
 
-  function idsFor(key, language) {
-    return { label: `button_label_${key}_${language}`, content: `button_content_${key}_${language}` };
+  function idsFor(button, language) {
+    const [key, , labelKey = key] = button;
+    return { label: `button_label_${labelKey}_${language}`, content: `button_content_${key}_${language}` };
   }
   function currentButton() { return buttons.find(([key]) => key === selectedKey.value) || buttons[0]; }
-  function loadEditor() {
-    const [key, fallbackLabel] = currentButton();
-    const ids = idsFor(key, selectedLanguage.value);
-    $("contentLabel").value = String(state.cache[ids.label]?.value ?? fallbackLabel);
-    $("contentValue").value = valueForEditor(state.cache[ids.content]?.value);
+  async function loadEditor() {
+    const button = currentButton();
+    const [key, fallbackLabel] = button;
+    const ids = idsFor(button, selectedLanguage.value);
+    const selection = `${key}:${selectedLanguage.value}`;
+    const records = await Promise.all([ids.label, ids.content].map(async (id) => {
+      if (state.cache[id]) return state.cache[id];
+      const snapshot = await getDoc(doc(db, "admin_content", id));
+      if (!snapshot.exists()) return null;
+      const record = { id: snapshot.id, ...snapshot.data() };
+      state.cache[id] = record;
+      return record;
+    }));
+    if (selection !== `${selectedKey.value}:${selectedLanguage.value}`) return;
+    const [labelRecord, contentRecord] = records;
+    $("contentLabel").value = String(labelRecord?.value ?? fallbackLabel);
+    $("contentValue").value = valueForEditor(contentRecord?.value ?? "");
     $("contentLanguage").value = selectedLanguage.value;
   }
   function drawList() {
@@ -288,14 +301,14 @@ async function renderContent() {
     document.querySelectorAll("#contentList .row").forEach((row) => row.addEventListener("click", () => {
       selectedKey.value = row.dataset.key;
       drawList();
-      loadEditor();
+      void loadEditor();
     }));
   }
   $("contentSearch").addEventListener("input", drawList);
-  $("contentLanguage").addEventListener("change", () => { selectedLanguage.value = $("contentLanguage").value; loadEditor(); });
+  $("contentLanguage").addEventListener("change", () => { selectedLanguage.value = $("contentLanguage").value; void loadEditor(); });
   $("saveButtonContent").addEventListener("click", async () => {
-    const [key] = currentButton();
-    const ids = idsFor(key, selectedLanguage.value);
+    const button = currentButton();
+    const ids = idsFor(button, selectedLanguage.value);
     const label = $("contentLabel").value.trim();
     if (!label) { showStatus("Informe o texto do botão."); return; }
     await Promise.all([
@@ -305,9 +318,9 @@ async function renderContent() {
     showStatus("Botão salvo com sucesso.", true);
     openPage(state.currentPage);
   });
-  $("clearContent").addEventListener("click", loadEditor);
+  $("clearContent").addEventListener("click", () => { void loadEditor(); });
   drawList();
-  loadEditor();
+  void loadEditor();
 }
 
 async function renderCollectionEditor(collectionName, sectionId, title, fields) {
@@ -316,7 +329,7 @@ async function renderCollectionEditor(collectionName, sectionId, title, fields) 
   section.innerHTML = `
     <div class="grid">
       <div class="card"><h3>${title} <span class="muted">${items.length}</span></h3><div class="video-list">${items.map((item, index) => `<div class="video-row" data-id="${esc(item.id)}" role="button" tabindex="0">${renderVideoListItem(item, index)}</div>`).join("") || '<div class="empty">Nenhum vídeo cadastrado.</div>'}</div></div>
-      <div class="card"><h3>Vídeo</h3><p class="muted">Selecione um vídeo na lista ou envie um novo. Informe somente o título e o nome.</p><form id="recordForm"><input id="recordId" type="hidden"><div>${fields.map(([key, label, type]) => `<label for="f_${key}">${label}</label>${type === "textarea" ? `<textarea id="f_${key}"></textarea>` : `<input id="f_${key}">`}`).join("")}</div><div class="upload-row"><label for="videoFile">Enviar vídeo</label><input id="videoFile" type="file" accept="video/mp4,video/webm,video/quicktime"><small class="muted">Até 120 MB. O nome do arquivo será preenchido automaticamente.</small></div><div class="upload-row"><label for="videoThumbFile">Enviar miniatura (opcional)</label><input id="videoThumbFile" type="file" accept="image/*"><small class="muted">A URL será preenchida automaticamente.</small></div><div id="mediaPreview" class="media-preview hidden"></div><div class="actions"><button class="button primary-button">Salvar vídeo</button><button type="button" id="deleteCurrent" class="button danger-button hidden">Excluir</button><button type="button" id="clearCurrent" class="button">Limpar</button></div></form></div>
+      <div class="card"><h3>Editar ${collectionName === "conhecaUnila" ? "post" : "notícia"}</h3><p class="muted">Toque em um item para editar. Informe o título e o nome do arquivo.</p><form id="recordForm"><input id="recordId" type="hidden"><div>${fields.map(([key, label, type]) => `<label for="f_${key}">${label}</label>${type === "textarea" ? `<textarea id="f_${key}"></textarea>` : `<input id="f_${key}">`}`).join("")}</div><div class="upload-row"><label for="videoFile">Enviar vídeo</label><input id="videoFile" type="file" accept="video/mp4,video/webm,video/quicktime"><small class="muted">Até 120 MB. O nome do arquivo será preenchido automaticamente.</small></div><div class="upload-row"><label for="videoThumbFile">Enviar miniatura (opcional)</label><input id="videoThumbFile" type="file" accept="image/*"><small class="muted">A URL será preenchida automaticamente.</small></div><div id="mediaPreview" class="media-preview hidden"></div><div class="actions"><button class="button primary-button">Salvar alterações</button><button type="button" id="deleteCurrent" class="button danger-button hidden">Excluir</button><button type="button" id="clearCurrent" class="button">Limpar</button></div></form></div>
     </div>`;
 
   items.forEach((item) => section.querySelector(`[data-id="${CSS.escape(item.id)}"]`)?.addEventListener("click", () => {
