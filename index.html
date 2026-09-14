@@ -1,54 +1,205 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Spotted Unila — AdminPanel</title>
   <style>
-    :root{--bg:#080b14;--card:#101827;--line:#263650;--text:#f5f7fb;--muted:#91a0b8;--pink:#ec55a5;--cyan:#49d9e8;--danger:#ff7285}
-    *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% 0,#281746,#080b14 42%);color:var(--text);font:14px Arial,sans-serif;min-height:100vh}button,input,textarea,select{font:inherit}button{cursor:pointer}.hidden{display:none!important}
-    .login{min-height:100vh;display:grid;place-items:center;padding:20px}.box{width:min(440px,100%);background:#0d1422ee;border:1px solid #ec55a566;border-radius:16px;padding:28px;box-shadow:0 20px 70px #0008}.brand{color:var(--cyan);font-size:11px;font-weight:bold;letter-spacing:.14em;text-transform:uppercase}.box h1{font-size:30px;margin:18px 0 8px}.box h1 span{color:var(--pink)}
-    label{display:block;color:#b7c4d8;font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin:16px 0 6px}input,textarea,select{width:100%;color:var(--text);background:#080d17;border:1px solid var(--line);border-radius:8px;padding:11px;outline:0}textarea{min-height:130px;resize:vertical}input:focus,textarea:focus,select:focus{border-color:var(--cyan)}
-    .btn{border:1px solid var(--line);border-radius:8px;background:#162239;color:var(--text);padding:10px 14px;font-weight:bold}.btn:hover{border-color:var(--cyan)}.primary{background:linear-gradient(135deg,#ef5cac,#bd369c);border:0}.danger{color:#ffd4da;border-color:#ff728566}.msg{padding:10px;border-radius:8px;margin-top:12px;background:#ff72851a;color:#ffc3cc}.ok{background:#51dc9b1a;color:#baffdb}
-    .layout{display:grid;grid-template-columns:235px 1fr;min-height:100vh}.side{padding:20px 12px;background:#080e19ee;border-right:1px solid #ffffff12}.side nav{display:grid;gap:6px;margin-top:25px}.nav{background:transparent;color:#aebbd0;border:1px solid transparent;text-align:left;padding:11px;border-radius:8px}.nav.active,.nav:hover{background:#18253b;color:#fff;border-color:#49d9e833}.side small{position:fixed;bottom:20px;color:var(--muted)}main{padding:26px;max-width:1400px;width:100%;margin:auto}.top{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:20px}.top h2{margin:4px 0;font-size:28px}.muted{color:var(--muted)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}.card{background:#101827dd;border:1px solid #ffffff12;border-radius:13px;padding:17px}.card h3{margin-top:0}.list{display:grid;gap:7px;max-height:620px;overflow:auto}.row{display:flex;justify-content:space-between;gap:8px;text-align:left;width:100%;background:#152239;border:1px solid #ffffff12;color:var(--text);padding:10px;border-radius:8px}.row:hover{border-color:var(--cyan)}.row strong,.row small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:420px}.row small{color:var(--muted);margin-top:4px}.field{margin-bottom:12px}.actions{display:flex;gap:8px;flex-wrap:wrap}.empty{padding:25px;text-align:center;color:var(--muted);border:1px dashed #ffffff22;border-radius:8px}.pill{color:var(--cyan);font-size:11px}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.metric{background:#101827;border:1px solid #ffffff12;border-radius:12px;padding:15px}.metric strong{display:block;color:var(--cyan);font-size:24px;margin-top:6px}
-    @media(max-width:800px){.layout{display:block}.side{border-right:0;border-bottom:1px solid #ffffff12}.side nav{display:flex;overflow:auto}.nav{white-space:nowrap}.side small{display:none}main{padding:16px}.grid{grid-template-columns:1fr}.top{display:block}.top .actions{margin-top:12px}.metrics{grid-template-columns:1fr 1fr}}
+    :root{--bg:#080b14;--panel:#101827;--panel2:#151f32;--line:#2b3b59;--text:#f7f9ff;--muted:#9aa8bd;--pink:#ec55a5;--cyan:#4dd9e8;--red:#ff7184;--green:#56dfa1}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:radial-gradient(circle at 80% 0,#291845,#080b14 45%);color:var(--text);font:14px Arial,sans-serif}
+    button,input,textarea,select{font:inherit}
+    button{cursor:pointer}
+    .hidden{display:none!important}
+    .login{min-height:100vh;display:grid;place-items:center;padding:20px}
+    .login-card{width:min(440px,100%);background:#0d1422f2;border:1px solid #ec55a566;border-radius:16px;padding:28px;box-shadow:0 20px 80px #0009}
+    .brand{color:var(--cyan);font-size:11px;font-weight:bold;letter-spacing:.14em;text-transform:uppercase}
+    h1{font-size:31px;margin:18px 0 8px}h1 span{color:var(--pink)}h2{margin:4px 0;font-size:28px}h3{margin-top:0}
+    .muted{color:var(--muted);line-height:1.5}
+    label{display:block;color:#b8c5d8;font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin:16px 0 6px}
+    input,textarea,select{width:100%;padding:11px;border:1px solid var(--line);border-radius:8px;background:#080d17;color:var(--text);outline:0}
+    textarea{min-height:130px;resize:vertical}input:focus,textarea:focus,select:focus{border-color:var(--cyan)}
+    .btn{border:1px solid var(--line);border-radius:8px;background:#16243b;color:var(--text);padding:10px 14px;font-weight:bold}.btn:hover{border-color:var(--cyan)}
+    .primary{background:linear-gradient(135deg,#ef5cac,#bd369c);border:0}.danger{border-color:#ff718466;color:#ffd6dc}.success{border-color:#56dfa166;color:#baffdb}
+    .btn:disabled{opacity:.6;cursor:wait}
+    #loginMsg{display:none;margin-top:14px;padding:12px;border:1px solid var(--red);border-radius:8px;background:#3a1420;color:#ffd9df;line-height:1.45}
+    #loginMsg:not(:empty){display:block}
+    .layout{display:grid;grid-template-columns:235px 1fr;min-height:100vh}.sidebar{padding:20px 12px;background:#080e19ee;border-right:1px solid #ffffff12}.sidebar nav{display:grid;gap:6px;margin-top:25px}.nav{width:100%;text-align:left;border:1px solid transparent;border-radius:8px;background:transparent;color:#aebbd0;padding:11px}.nav:hover,.nav.active{background:#18253b;color:#fff;border-color:#49d9e833}.account{position:fixed;bottom:18px;color:var(--muted);font-size:11px;padding:0 12px}
+    main{width:100%;max-width:1400px;margin:auto;padding:26px}.top{display:flex;justify-content:space-between;gap:15px;align-items:flex-start;margin-bottom:20px}.actions{display:flex;gap:8px;flex-wrap:wrap}.grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}.card{background:#101827dd;border:1px solid #ffffff12;border-radius:13px;padding:17px}.list{display:grid;gap:7px;max-height:620px;overflow:auto}.row{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;background:var(--panel2);border:1px solid #ffffff12;color:var(--text);padding:11px;border-radius:8px}.row:hover{border-color:var(--cyan)}.row strong,.row small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:440px}.row small{color:var(--muted);margin-top:4px}.empty{padding:25px;text-align:center;color:var(--muted);border:1px dashed #ffffff22;border-radius:8px}.msg{padding:11px;border-radius:8px;margin:0 0 15px;background:#ff71841a;color:#ffd1d8}.msg.ok{background:#56dfa11a;color:#baffdb}.metric-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.metric{background:var(--panel);border:1px solid #ffffff12;border-radius:12px;padding:15px}.metric strong{display:block;margin-top:7px;color:var(--cyan);font-size:24px}
+    @media(max-width:800px){.layout{display:block}.sidebar{border-right:0;border-bottom:1px solid #ffffff12}.sidebar nav{display:flex;overflow:auto}.nav{white-space:nowrap;width:auto}.account{display:none}main{padding:16px}.top{display:block}.top .actions{margin-top:12px}.grid{grid-template-columns:1fr}.metric-grid{grid-template-columns:1fr 1fr}}
   </style>
 </head>
 <body>
-  <section id="login" class="login"><div class="box"><div class="brand">Spotted / Unila · Firebase Auth</div><h1>Admin <span>Panel</span></h1><p class="muted">A autorização real é feita pelo Firebase Authentication e pelas regras do Firestore.</p><form id="loginForm"><label>E-mail</label><input id="email" type="email" value="fernando2018a1986@gmail.com" required><label>Senha</label><input id="password" type="password" required><button class="btn primary" style="width:100%;margin-top:18px">Entrar</button></form><div id="loginMsg"></div></div></section>
-  <section id="panel" class="layout hidden">
-    <aside class="side"><div class="brand">Spotted / Unila<br><span style="color:white">AdminPanel</span></div><nav><button class="nav active" data-page="home">Visão geral</button><button class="nav" data-page="content">Textos e botões</button><button class="nav" data-page="news">Notícias</button><button class="nav" data-page="conheca">Conheça a Unila</button><button class="nav" data-page="moderation">Moderação</button></nav><small id="account"></small></aside>
-    <main><header class="top"><div><div class="brand">PAINEL ADMINISTRATIVO</div><h2 id="title">Visão geral</h2><div id="description" class="muted">Conteúdos essenciais do aplicativo.</div></div><div class="actions"><button id="logout" class="btn">Sair</button></div></header><div id="message"></div><section id="home" class="page"></section><section id="content" class="page hidden"></section><section id="news" class="page hidden"></section><section id="conheca" class="page hidden"></section><section id="moderation" class="page hidden"></section></main>
+  <section id="loginView" class="login">
+    <div class="login-card">
+      <div class="brand">Spotted / Unila · Firebase Auth</div>
+      <h1>Admin <span>Panel</span></h1>
+      <p class="muted">Área administrativa para textos, notícias, Conheça a Unila e moderação.</p>
+      <form id="loginForm">
+        <label for="email">E-mail autorizado</label>
+        <input id="email" type="email" value="fernando2018a1986@gmail.com" required>
+        <label for="password">Senha Firebase</label>
+        <input id="password" type="password" autocomplete="current-password" required>
+        <button id="loginButton" class="btn primary" style="width:100%;margin-top:18px">Entrar no painel</button>
+      </form>
+      <div id="loginMsg" role="alert" aria-live="polite"></div>
+    </div>
   </section>
+
+  <section id="panelView" class="layout hidden">
+    <aside class="sidebar">
+      <div class="brand">Spotted / Unila<br><span style="color:white">AdminPanel</span></div>
+      <nav>
+        <button class="nav active" data-page="home">Visão geral</button>
+        <button class="nav" data-page="content">Textos e botões</button>
+        <button class="nav" data-page="news">Notícias</button>
+        <button class="nav" data-page="conheca">Conheça a Unila</button>
+        <button class="nav" data-page="moderation">Moderação</button>
+      </nav>
+      <div id="account" class="account"></div>
+    </aside>
+
+    <main>
+      <header class="top">
+        <div><div class="brand">PAINEL ADMINISTRATIVO</div><h2 id="pageTitle">Visão geral</h2><div id="pageDescription" class="muted">Conteúdos essenciais do aplicativo.</div></div>
+        <div class="actions"><button id="logoutButton" class="btn">Sair</button></div>
+      </header>
+      <div id="status"></div>
+      <section id="homePage" class="page"></section>
+      <section id="contentPage" class="page hidden"></section>
+      <section id="newsPage" class="page hidden"></section>
+      <section id="conhecaPage" class="page hidden"></section>
+      <section id="moderationPage" class="page hidden"></section>
+    </main>
+  </section>
+
   <script type="module">
     import {initializeApp} from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js';
     import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js';
     import {getFirestore,collection,getDocs,doc,setDoc,deleteDoc,serverTimestamp,query,limit} from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js';
 
-    const firebaseConfig={apiKey:'AIzaSyDCm8jh-gz3T8OkOH2J6ls66t5QizcKwu8',authDomain:'app-unila.firebaseapp.com',projectId:'app-unila',storageBucket:'app-unila.firebasestorage.app',messagingSenderId:'574505875323',appId:'1:574505875323:web:fb885f0a2ae32b272fafde',measurementId:'G-FJT3X93608'};
+    const firebaseConfig={
+      apiKey:'AIzaSyDC4m8jh-gz3T8OkOH2J6ls66t5QizcKwu8',
+      authDomain:'app-unila.firebaseapp.com',
+      projectId:'app-unila',
+      storageBucket:'app-unila.firebasestorage.app',
+      messagingSenderId:'574505875323',
+      appId:'1:574505875323:web:fb885f0a2ae32b272fafde',
+      measurementId:'G-FJT3X93608'
+    };
+
     const ADMIN_EMAIL='fernando2018a1986@gmail.com';
-    const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);const $=id=>document.getElementById(id);
-    const langs=['pt','fr','es'];
+    const app=initializeApp(firebaseConfig);
+    const auth=getAuth(app);
+    const db=getFirestore(app);
+    const $=id=>document.getElementById(id);
+    let currentUser=null;
+    let currentPage='home';
+    let contentCache={};
+
     const labelKeys=['home','podcast','music','chatMenu','portal','inscreva','sigaa','email','google','instagram','facebook','library','intercampus','notices','emergency','addresses','ru','group','developer','privacy','notes','share','internet','study','academicGoals','studentAid','mentalHealth','enem','news','conheca','desapega','upa'];
     const contentKeys=['portal_unila','inscreva','sigaa','email','google','instagram','facebook','biblioteca','intercampi','editais','emergencia','enderecos','ru','dev','internet','estude','auxilio_estudantil','saude_mental','enem','grupo_facebook','noticias','upa'];
-    let currentUser=null,active='home',cache={};
-    const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    const message=(text,ok=false)=>$('message').innerHTML=text?`<div class="msg ${ok?'ok':''}">${escape(text)}</div>`:'';
-    const allowed=u=>u&&u.email===ADMIN_EMAIL&&u.emailVerified!==false;
-    async function read(name){const snap=await getDocs(query(collection(db,name),limit(300)));return snap.docs.map(x=>({id:x.id,...x.data()}));}
-    async function save(name,id,data){await setDoc(doc(db,name,id),data,{merge:true});message('Salvo com sucesso.',true);openPage(active)}
-    async function remove(name,id){if(!confirm('Excluir este registro?'))return;await deleteDoc(doc(db,name,id));message('Registro excluído.',true);openPage(active)}
-    function showPanel(){ $('login').classList.add('hidden');$('panel').classList.remove('hidden');$('account').textContent=currentUser.email;openPage('home'); }
-    function showLogin(error=''){ $('login').classList.remove('hidden');$('panel').classList.add('hidden');if(error)$('loginMsg').innerHTML=`<div class="msg">${escape(error)}</div>`; }
-    $('loginForm').onsubmit=async e=>{e.preventDefault();try{const r=await signInWithEmailAndPassword(auth,$('email').value.trim(),$('password').value);if(!allowed(r.user)){await signOut(auth);throw Error('Conta sem autorização administrativa.')}}catch(err){$('loginMsg').innerHTML=`<div class="msg">${escape(err.message)}</div>`}};
-    $('logout').onclick=()=>signOut(auth);onAuthStateChanged(auth,u=>{currentUser=u;if(allowed(u))showPanel();else if(u){signOut(auth);showLogin('Esta conta não está autorizada.')}else showLogin()});
-    document.querySelectorAll('.nav').forEach(b=>b.onclick=()=>openPage(b.dataset.page));
-    function openPage(page){active=page;document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));$(page).classList.remove('hidden');document.querySelectorAll('.nav').forEach(x=>x.classList.toggle('active',x.dataset.page===page));const names={home:['Visão geral','Conteúdos essenciais do aplicativo.'],content:['Textos e botões','IDs button_label_* e button_content_* em PT, FR e ES.'],news:['Notícias','Publicações exibidas no aplicativo.'],conheca:['Conheça a Unila','Conteúdo editorial da coleção conhecaUnila.'],moderation:['Moderação','Bloqueios e denúncias.']};$('title').textContent=names[page][0];$('description').textContent=names[page][1];if(page==='home')home();if(page==='content')content();if(page==='news')editor('news','Notícias',[['title','Título'],['content','Conteúdo','textarea'],['imageUrl','URL da imagem'],['videoUrl','URL do vídeo']]);if(page==='conheca')editor('conhecaUnila','Conheça a Unila',[['title','Título'],['content','Conteúdo','textarea'],['imageUrl','URL da imagem'],['videoUrl','URL do vídeo']]);if(page==='moderation')moderation();}
-    function home(){$('home').innerHTML=`<div class="metrics"><div class="metric"><span class="muted">Conta</span><strong>ADMIN</strong></div><div class="metric"><span class="muted">Rótulos</span><strong>${labelKeys.length*3}</strong></div><div class="metric"><span class="muted">Conteúdos</span><strong>${contentKeys.length*3}</strong></div></div><div class="card" style="margin-top:15px"><h3>Uso seguro</h3><p class="muted">A configuração Web do Firebase pode aparecer no navegador. A proteção deve estar nas regras do Firebase; nunca coloque senha ou chave privada neste arquivo.</p></div>`}
-    function ids(){return [...labelKeys.flatMap(k=>langs.map(l=>`button_label_${k}_${l}`)),...contentKeys.flatMap(k=>langs.map(l=>`button_content_${k}_${l}`))]}
-    async function content(){const items=await read('admin_content');cache=Object.fromEntries(items.map(x=>[x.id,x]));const all=[...new Set([...ids(),...items.map(x=>x.id)])];$('content').innerHTML=`<div class="grid"><div class="card"><h3>Documentos <span class="pill">${items.length}</span></h3><input id="search" placeholder="Filtrar ID ou texto"><div id="contentList" class="list" style="margin-top:10px"></div></div><div class="card"><h3>Editar conteúdo</h3><form id="contentForm"><label>ID</label><select id="contentId"><option value="">Escolha do catálogo</option>${all.map(id=>`<option>${escape(id)}</option>`).join('')}</select><label>ID personalizado</label><input id="customId" placeholder="opcional"><label>Valor</label><textarea id="contentValue"></textarea><div class="actions"><button class="btn primary">Salvar</button><button type="button" id="clearContent" class="btn">Limpar</button></div></form></div></div>`;const list=()=>{const q=$('search').value.toLowerCase();$('contentList').innerHTML=all.filter(id=>(id+' '+(cache[id]?.value||'')).toLowerCase().includes(q)).map(id=>`<button class="row" data-id="${escape(id)}"><span><strong>${escape(id)}</strong><small>${escape(cache[id]?.value||'Sem valor')}</small></span>›</button>`).join('')||'<div class="empty">Nenhum documento.</div>';document.querySelectorAll('#contentList .row').forEach(b=>b.onclick=()=>{const id=b.dataset.id;$('contentId').value=id;$('contentValue').value=typeof cache[id]?.value==='object'?JSON.stringify(cache[id].value,null,2):cache[id]?.value||''})};$('search').oninput=list;list();$('contentForm').onsubmit=async e=>{e.preventDefault();const id=$('customId').value.trim()||$('contentId').value;if(!id)return message('Informe um ID.');let value=$('contentValue').value;try{value=JSON.parse(value)}catch{}await save('admin_content',id,{value})};$('clearContent').onclick=()=>{$('contentId').value='';$('customId').value='';$('contentValue').value=''}}
-    async function editor(name,title,fields){const items=await read(name);$(''+name.replace('conhecaUnila','conheca')).innerHTML=`<div class="grid"><div class="card"><h3>${title} <span class="pill">${items.length}</span></h3><div class="list">${items.map(r=>`<button class="row" data-id="${escape(r.id)}"><span><strong>${escape(r.title||r.id)}</strong><small>${escape(r.content||r.description||'')}</small></span>›</button>`).join('')||'<div class="empty">Nenhum registro.</div>'}</div></div><div class="card"><h3>Editor</h3><form id="recordForm"><label>ID</label><input id="recordId" placeholder="vazio para gerar automaticamente">${fields.map(f=>f[2]==='textarea'?`<label>${f[1]}</label><textarea id="f_${f[0]}"></textarea>`:`<label>${f[1]}</label><input id="f_${f[0]}">`).join('')}<div class="actions"><button class="btn primary">Salvar</button><button type="button" id="deleteRecord" class="btn danger hidden">Excluir</button><button type="button" id="clearRecord" class="btn">Limpar</button></div></form></div></div>`;items.forEach(r=>$(name==='news'?'news':'conheca').querySelector(`[data-id="${CSS.escape(r.id)}"]`)?.addEventListener('click',()=>{ $('recordId').value=r.id;fields.forEach(f=>$('f_'+f[0]).value=r[f[0]]||'');$('deleteRecord').classList.remove('hidden')});$('recordForm').onsubmit=async e=>{e.preventDefault();const id=$('recordId').value.trim()||crypto.randomUUID();const data={};fields.forEach(f=>data[f[0]]=$('f_'+f[0]).value.trim());if(name==='news'){data.timestamp=serverTimestamp();data.createdAt=serverTimestamp()}await save(name,id,data)};$('deleteRecord').onclick=async()=>{const id=$('recordId').value.trim();if(id)await remove(name,id)};$('clearRecord').onclick=()=>location.reload()}
-    async function moderation(){$('moderation').innerHTML=`<div class="grid"><div class="card"><h3>Bloquear usuário</h3><form id="banForm"><label>UID ou identificador</label><input id="banId" required><label>Motivo</label><textarea id="banReason"></textarea><button class="btn danger">Salvar bloqueio</button></form></div><div class="card"><h3>Denúncias</h3><div id="reports" class="list">Carregando...</div></div></div>`;$('banForm').onsubmit=async e=>{e.preventDefault();await save('bannedUsers',$('banId').value.trim(),{reason:$('banReason').value.trim(),createdAt:serverTimestamp()})};const reports=await read('ugc_reports');$('reports').innerHTML=reports.map(r=>`<div class="row"><span><strong>${escape(r.type||'Denúncia')}</strong><small>${escape(r.text||r.reason||r.id)}</small></span></div>`).join('')||'<div class="empty">Nenhuma denúncia.</div>'}
+    const languages=['pt','fr','es'];
+
+    function escapeHtml(value){return String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));}
+    function setStatus(text,ok=false){$('status').innerHTML=text?`<div class="msg ${ok?'ok':''}">${escapeHtml(text)}</div>`:'';}
+    function allowed(user){return !!user&&user.email===ADMIN_EMAIL&&user.emailVerified!==false;}
+    function errorMessage(error){
+      const messages={
+        'auth/invalid-credential':'E-mail ou senha incorretos.',
+        'auth/invalid-login-credentials':'E-mail ou senha incorretos.',
+        'auth/wrong-password':'A senha informada está incorreta.',
+        'auth/user-not-found':'Não existe uma conta Firebase com este e-mail.',
+        'auth/user-disabled':'Esta conta foi desativada no Firebase.',
+        'auth/too-many-requests':'Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.',
+        'auth/network-request-failed':'Falha de conexão. Verifique a internet.',
+        'auth/operation-not-allowed':'O login por e-mail e senha não está habilitado no Firebase.',
+        'auth/invalid-email':'O formato do e-mail é inválido.'
+      };
+      return messages[error?.code]||`Não foi possível entrar. Código: ${error?.code||'desconhecido'}.`;
+    }
+    function showLoginError(text){$('loginMsg').textContent=text;$('loginMsg').style.display='block';}
+    function clearLoginError(){ $('loginMsg').textContent='';$('loginMsg').style.display='none'; }
+
+    $('loginForm').addEventListener('submit',async event=>{
+      event.preventDefault();
+      clearLoginError();
+      const email=$('email').value.trim();
+      const password=$('password').value;
+      if(!email||!password){showLoginError('Digite o e-mail e a senha.');return;}
+      const button=$('loginButton');
+      button.disabled=true;button.textContent='Verificando...';
+      try{
+        const result=await signInWithEmailAndPassword(auth,email,password);
+        if(!allowed(result.user)){await signOut(auth);throw {code:'auth/not-authorized'};}
+      }catch(error){
+        // Mantém a senha preenchida quando a tentativa falha.
+        $('password').value=password;
+        showLoginError(error?.code==='auth/not-authorized'?'Esta conta não está autorizada para o AdminPanel.':errorMessage(error));
+      }finally{
+        button.disabled=false;button.textContent='Entrar no painel';
+      }
+    });
+
+    $('logoutButton').onclick=()=>signOut(auth);
+    onAuthStateChanged(auth,user=>{
+      currentUser=user;
+      if(allowed(user)){ $('loginView').classList.add('hidden');$('panelView').classList.remove('hidden');$('account').textContent=user.email;openPage('home'); }
+      else if(user){signOut(auth);$('loginView').classList.remove('hidden');$('panelView').classList.add('hidden');showLoginError('Esta conta não está autorizada.');}
+      else{$('loginView').classList.remove('hidden');$('panelView').classList.add('hidden');}
+    });
+
+    document.querySelectorAll('.nav').forEach(button=>button.onclick=()=>openPage(button.dataset.page));
+    function openPage(page){
+      currentPage=page;
+      document.querySelectorAll('.page').forEach(section=>section.classList.add('hidden'));
+      $(page+'Page').classList.remove('hidden');
+      document.querySelectorAll('.nav').forEach(button=>button.classList.toggle('active',button.dataset.page===page));
+      const titles={home:['Visão geral','Conteúdos essenciais do aplicativo.'],content:['Textos e botões','IDs button_label_* e button_content_* em PT, FR e ES.'],news:['Notícias','Publicações exibidas no aplicativo.'],conheca:['Conheça a Unila','Publicações da coleção conhecaUnila.'],moderation:['Moderação','Bloqueios e denúncias.']};
+      $('pageTitle').textContent=titles[page][0];$('pageDescription').textContent=titles[page][1];
+      if(page==='home')renderHome();
+      if(page==='content')renderContent();
+      if(page==='news')renderCollection('news','newsPage','Notícias',[['title','Título'],['content','Conteúdo','textarea'],['imageUrl','URL da imagem'],['videoUrl','URL do vídeo']]);
+      if(page==='conheca')renderCollection('conhecaUnila','conhecaPage','Conheça a Unila',[['title','Título'],['content','Conteúdo','textarea'],['imageUrl','URL da imagem'],['videoUrl','URL do vídeo']]);
+      if(page==='moderation')renderModeration();
+    }
+
+    function renderHome(){
+      $('homePage').innerHTML=`<div class="metric-grid"><div class="metric"><span class="muted">Conta</span><strong>ADMIN</strong></div><div class="metric"><span class="muted">Rótulos</span><strong>${labelKeys.length*3}</strong></div><div class="metric"><span class="muted">Conteúdos</span><strong>${contentKeys.length*3}</strong></div></div><div class="card" style="margin-top:15px"><h3>Segurança</h3><p class="muted">A configuração Web do Firebase pode estar no navegador. A proteção real deve estar nas regras do Firebase Authentication, Firestore e Storage. Nunca coloque senha ou chave privada neste arquivo.</p></div>`;
+    }
+
+    function catalogIds(){return [...labelKeys.flatMap(key=>languages.map(lang=>`button_label_${key}_${lang}`)),...contentKeys.flatMap(key=>languages.map(lang=>`button_content_${key}_${lang}`))];}
+    function parseValue(value){try{return JSON.parse(value)}catch{return value}}
+
+    async function readCollection(name){const snapshot=await getDocs(query(collection(db,name),limit(300)));return snapshot.docs.map(item=>({id:item.id,...item.data()}));}
+    async function saveRecord(name,id,data){await setDoc(doc(db,name,id),data,{merge:true});setStatus('Registro salvo com sucesso.',true);openPage(currentPage);}
+    async function deleteRecord(name,id){if(!confirm('Excluir este registro?'))return;await deleteDoc(doc(db,name,id));setStatus('Registro excluído.',true);openPage(currentPage);}
+
+    async function renderContent(){
+      const items=await readCollection('admin_content');
+      contentCache=Object.fromEntries(items.map(item=>[item.id,item]));
+      const ids=[...new Set([...catalogIds(),...items.map(item=>item.id)])];
+      $('contentPage').innerHTML=`<div class="grid"><div class="card"><h3>Documentos <span class="muted">${items.length}</span></h3><input id="contentSearch" placeholder="Filtrar por ID ou texto"><div id="contentList" class="list" style="margin-top:10px"></div></div><div class="card"><h3>Editar conteúdo</h3><form id="contentForm"><label>ID do documento</label><select id="contentId"><option value="">Escolha um ID</option>${ids.map(id=>`<option value="${escapeHtml(id)}">${escapeHtml(id)}</option>`).join('')}</select><label>ID personalizado</label><input id="customContentId" placeholder="opcional"><label>Valor</label><textarea id="contentValue" placeholder="Texto simples ou JSON válido"></textarea><div class="actions"><button class="btn primary">Salvar</button><button type="button" id="clearContent" class="btn">Limpar</button></div></form></div></div>`;
+      const draw=()=>{const search=$('contentSearch').value.toLowerCase();$('contentList').innerHTML=ids.filter(id=>(id+' '+(contentCache[id]?.value??'')).toLowerCase().includes(search)).map(id=>`<button class="row" data-id="${escapeHtml(id)}"><span><strong>${escapeHtml(id)}</strong><small>${escapeHtml(contentCache[id]?.value??'Sem valor')}</small></span><span>›</span></button>`).join('')||'<div class="empty">Nenhum documento.</div>';document.querySelectorAll('#contentList .row').forEach(row=>row.onclick=()=>{const id=row.dataset.id;$('contentId').value=id;$('contentValue').value=typeof contentCache[id]?.value==='object'?JSON.stringify(contentCache[id].value,null,2):contentCache[id]?.value||''})};
+      $('contentSearch').oninput=draw;draw();
+      $('contentForm').onsubmit=async event=>{event.preventDefault();const id=$('customContentId').value.trim()||$('contentId').value;if(!id)return setStatus('Informe um ID.');await saveRecord('admin_content',id,{value:parseValue($('contentValue').value)});};
+      $('clearContent').onclick=()=>{$('contentId').value='';$('customContentId').value='';$('contentValue').value='';};
+    }
+
+    async function renderCollection(name,sectionId,title,fields){
+      const items=await readCollection(name);const section=$(sectionId);
+      section.innerHTML=`<div class="grid"><div class="card"><h3>${title} <span class="muted">${items.length}</span></h3><div class="list">${items.map(item=>`<button class="row" data-id="${escapeHtml(item.id)}"><span><strong>${escapeHtml(item.title||item.id)}</strong><small>${escapeHtml(item.content||'')}</small></span><span>›</span></button>`).join('')||'<div class="empty">Nenhum registro.</div>'}</div></div><div class="card"><h3>Editar registro</h3><form id="recordForm"><label>ID</label><input id="recordId" placeholder="vazio para criar automaticamente">${fields.map(field=>field[2]==='textarea'?`<label>${field[1]}</label><textarea id="field_${field[0]}"></textarea>`:`<label>${field[1]}</label><input id="field_${field[0]}">`).join('')}<div class="actions"><button class="btn primary">Salvar</button><button type="button" id="deleteCurrent" class="btn danger hidden">Excluir</button><button type="button" id="clearCurrent" class="btn">Limpar</button></div></form></div></div>`;
+      items.forEach(item=>section.querySelector(`[data-id="${CSS.escape(item.id)}"]`)?.addEventListener('click',()=>{$('recordId').value=item.id;fields.forEach(field=>{$('field_'+field[0]).value=item[field[0]]||''});$('deleteCurrent').classList.remove('hidden')}));
+      $('recordForm').onsubmit=async event=>{event.preventDefault();const id=$('recordId').value.trim()||crypto.randomUUID();const data={};fields.forEach(field=>data[field[0]]=$('field_'+field[0]).value.trim());if(name==='news'){data.timestamp=serverTimestamp();data.createdAt=serverTimestamp()}await saveRecord(name,id,data)};
+      $('deleteCurrent').onclick=async()=>{const id=$('recordId').value.trim();if(id)await deleteRecord(name,id)};
+      $('clearCurrent').onclick=()=>openPage(currentPage);
+    }
+
+    async function renderModeration(){
+      $('moderationPage').innerHTML=`<div class="grid"><div class="card"><h3>Bloquear usuário</h3><form id="banForm"><label>UID ou identificador</label><input id="banId" required><label>Motivo</label><textarea id="banReason"></textarea><button class="btn danger">Salvar bloqueio</button></form></div><div class="card"><h3>Denúncias</h3><div id="reports" class="list">Carregando...</div></div></div>`;
+      $('banForm').onsubmit=async event=>{event.preventDefault();await saveRecord('bannedUsers',$('banId').value.trim(),{reason:$('banReason').value.trim(),createdAt:serverTimestamp()})};
+      const reports=await readCollection('ugc_reports');$('reports').innerHTML=reports.map(item=>`<div class="row"><span><strong>${escapeHtml(item.type||'Denúncia')}</strong><small>${escapeHtml(item.text||item.reason||item.id)}</small></span></div>`).join('')||'<div class="empty">Nenhuma denúncia.</div>';
+    }
   </script>
 </body>
 </html>
