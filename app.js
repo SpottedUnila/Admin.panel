@@ -138,8 +138,9 @@ async function readCollection(name) {
   return snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
 }
 
-async function saveRecord(name, id, data) {
+async function saveRecord(name, id, data, refresh = true) {
   await setDoc(doc(db, name, id), data, { merge: true });
+  if (!refresh) return;
   showStatus("Registro salvo com sucesso.", true);
   openPage(state.currentPage);
 }
@@ -172,56 +173,82 @@ function renderMediaPreview(imageUrl, videoUrl) {
 async function renderContent() {
   const items = await readCollection("admin_content");
   state.cache = Object.fromEntries(items.map((item) => [item.id, item]));
-  const allIds = [...new Set([...knownContentIds(), ...items.map((item) => item.id)])];
+  const buttons = [
+    ["portal_unila", "Portal Oficial da Unila"], ["inscreva", "Portal Inscreva"],
+    ["sigaa", "Sistema Acadêmico SIGAA"], ["email", "E-mail Institucional"],
+    ["google", "Pesquisa Google"], ["instagram", "Instagram Unila"], ["facebook", "Facebook Unila"],
+    ["biblioteca", "Biblioteca Unila"], ["intercampi", "Transporte Intercampi"], ["editais", "Editais Oficiais"],
+    ["emergencia", "Telefones de Emergência"], ["enderecos", "Endereços dos Campus"],
+    ["ru", "Restaurantes Universitários"], ["grupo_facebook", "Grupo no Facebook"],
+    ["dev", "Desenvolvedor"], ["privacy", "Privacidade e exclusão"], ["notes", "Anotações"],
+    ["share", "Compartilhar App"], ["internet", "Internet Unila"], ["estude", "Estude na Unila"],
+    ["academicGoals", "Meta Acadêmica"], ["studentAid", "Auxílio Estudantil"], ["mentalHealth", "Saúde Mental"],
+    ["enem", "ENEM"], ["news", "Notícias"], ["conheca", "Conheça a Unila"],
+    ["desapega", "Achados e Perdidos e Desapega"], ["upa", "Hospitais de Emergência 24h (UPA)"],
+  ];
+  const languageNames = { pt: "Português", fr: "Français", es: "Español" };
+  const selectedKey = { value: buttons[0][0] };
+  const selectedLanguage = { value: "pt" };
+
   $("contentPage").innerHTML = `
     <div class="grid">
       <div class="card">
-        <h3>Documentos <span class="muted">${items.length}</span></h3>
-        <input id="contentSearch" placeholder="Filtrar por ID ou texto" aria-label="Filtrar conteúdo">
+        <h3>Botões do aplicativo <span class="muted">${buttons.length}</span></h3>
+        <input id="contentSearch" placeholder="Filtrar botões" aria-label="Filtrar botões">
         <div id="contentList" class="list" style="margin-top:10px"></div>
       </div>
       <div class="card">
-        <h3>Editar conteúdo</h3>
-        <form id="contentForm">
-          <label for="contentId">ID do documento</label>
-          <select id="contentId"><option value="">Escolha um ID</option>${allIds.map((id) => `<option value="${esc(id)}">${esc(id)}</option>`).join("")}</select>
-          <label for="customId">ID personalizado</label>
-          <input id="customId" placeholder="opcional">
-          <label for="contentValue">Valor</label>
-          <textarea id="contentValue"></textarea>
-          <div class="actions"><button class="button primary-button">Salvar</button><button type="button" id="deleteContent" class="button danger-button hidden">Excluir</button><button type="button" id="clearContent" class="button">Limpar</button></div>
-        </form>
+        <h3>Editar botão</h3>
+        <p class="muted">Cada botão aparece uma única vez. O rótulo e o conteúdo completo são salvos juntos.</p>
+        <label for="contentLanguage">Idioma</label>
+        <select id="contentLanguage">${Object.entries(languageNames).map(([id, name]) => `<option value="${id}">${name}</option>`).join("")}</select>
+        <label for="contentLabel">Texto exibido no botão</label>
+        <input id="contentLabel">
+        <label for="contentValue">Conteúdo completo</label>
+        <textarea id="contentValue" rows="12"></textarea>
+        <div class="actions"><button id="saveButtonContent" class="button primary-button" type="button">Salvar botão</button><button id="clearContent" class="button" type="button">Limpar</button></div>
+        <p class="muted" style="margin-bottom:0">Os IDs técnicos ficam ocultos e são gerenciados automaticamente.</p>
       </div>
     </div>`;
 
-  const drawList = () => {
+  function idsFor(key, language) {
+    return { label: `button_label_${key}_${language}`, content: `button_content_${key}_${language}` };
+  }
+  function currentButton() { return buttons.find(([key]) => key === selectedKey.value) || buttons[0]; }
+  function loadEditor() {
+    const [key, fallbackLabel] = currentButton();
+    const ids = idsFor(key, selectedLanguage.value);
+    $("contentLabel").value = String(state.cache[ids.label]?.value ?? fallbackLabel);
+    $("contentValue").value = valueForEditor(state.cache[ids.content]?.value);
+    $("contentLanguage").value = selectedLanguage.value;
+  }
+  function drawList() {
     const search = $("contentSearch").value.toLowerCase();
-    const html = allIds.filter((id) => `${id} ${state.cache[id]?.value ?? ""}`.toLowerCase().includes(search)).map((id) => `
-      <button class="row" data-id="${esc(id)}" type="button"><span><strong>${esc(id)}</strong><small>${esc(state.cache[id]?.value ?? "Sem valor")}</small></span>›</button>`).join("");
-    $("contentList").innerHTML = html || '<div class="empty">Nenhum documento.</div>';
+    const visible = buttons.filter(([key, label]) => `${key} ${label}`.toLowerCase().includes(search));
+    $("contentList").innerHTML = visible.map(([key, label]) => `<button class="row ${key === selectedKey.value ? "active" : ""}" data-key="${esc(key)}" type="button"><span><strong>${esc(label)}</strong><small>${esc(key)}</small></span>›</button>`).join("") || '<div class="empty">Nenhum botão encontrado.</div>';
     document.querySelectorAll("#contentList .row").forEach((row) => row.addEventListener("click", () => {
-      const id = row.dataset.id;
-      $("contentId").value = id;
-      $("contentValue").value = valueForEditor(state.cache[id]?.value);
-      $("deleteContent").classList.toggle("hidden", !state.cache[id]);
+      selectedKey.value = row.dataset.key;
+      drawList();
+      loadEditor();
     }));
-  };
-
+  }
   $("contentSearch").addEventListener("input", drawList);
-  $("contentForm").addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const id = $("customId").value.trim() || $("contentId").value;
-    if (!id) { showStatus("Informe um ID."); return; }
-    await saveRecord("admin_content", id, { value: parseValue($("contentValue").value) });
+  $("contentLanguage").addEventListener("change", () => { selectedLanguage.value = $("contentLanguage").value; loadEditor(); });
+  $("saveButtonContent").addEventListener("click", async () => {
+    const [key] = currentButton();
+    const ids = idsFor(key, selectedLanguage.value);
+    const label = $("contentLabel").value.trim();
+    if (!label) { showStatus("Informe o texto do botão."); return; }
+    await Promise.all([
+      saveRecord("admin_content", ids.label, { value: label }, false),
+      saveRecord("admin_content", ids.content, { value: $("contentValue").value }, false),
+    ]);
+    showStatus("Botão salvo com sucesso.", true);
+    openPage(state.currentPage);
   });
-  $("clearContent").addEventListener("click", () => {
-    $("contentId").value = ""; $("customId").value = ""; $("contentValue").value = ""; $("deleteContent").classList.add("hidden");
-  });
-  $("deleteContent").addEventListener("click", () => {
-    const id = $("contentId").value;
-    if (id && state.cache[id]) removeRecord("admin_content", id);
-  });
+  $("clearContent").addEventListener("click", loadEditor);
   drawList();
+  loadEditor();
 }
 
 async function renderCollectionEditor(collectionName, sectionId, title, fields) {
