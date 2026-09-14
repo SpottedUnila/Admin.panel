@@ -28,6 +28,8 @@ const FIREBASE_CONFIG = {
 };
 
 const ADMIN_EMAIL = "fernando2018a1986@gmail.com";
+const CLOUDINARY_CLOUD_NAME = "dthnn5flq";
+const CLOUDINARY_UPLOAD_PRESET = "ml_default";
 const LANGUAGES = ["pt", "fr", "es"];
 const LABEL_KEYS = [
   "home", "podcast", "music", "chatMenu", "portal", "inscreva", "sigaa", "email",
@@ -170,6 +172,23 @@ function renderMediaPreview(imageUrl, videoUrl) {
   return `${image ? `<img src="${esc(image)}" alt="Pré-visualização da imagem" loading="lazy">` : ""}${video ? `<video src="${esc(video)}" controls preload="metadata"></video>` : ""}<a href="${esc(image || video)}" target="_blank" rel="noopener">Abrir mídia em nova aba</a>`;
 }
 
+async function uploadMediaFile(file) {
+  if (!file) return "";
+  const isImage = file.type.startsWith("image/");
+  const isVideo = file.type.startsWith("video/");
+  const maxBytes = isVideo ? 120 * 1024 * 1024 : 10 * 1024 * 1024;
+  if ((!isImage && !isVideo) || file.size > maxBytes) {
+    throw new Error(isVideo ? "Selecione um vídeo de até 120 MB." : "Selecione uma imagem de até 10 MB.");
+  }
+  const body = new FormData();
+  body.append("file", file);
+  body.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+  const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`, { method: "POST", body });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || !data.secure_url) throw new Error(data.error?.message || "O upload foi rejeitado.");
+  return data.secure_url;
+}
+
 async function renderContent() {
   const items = await readCollection("admin_content");
   state.cache = Object.fromEntries(items.map((item) => [item.id, item]));
@@ -258,7 +277,7 @@ async function renderCollectionEditor(collectionName, sectionId, title, fields) 
     <div class="grid">
       <div class="card"><h3>${title} <span class="muted">${items.length}</span></h3><div class="list">${items.map((item) => `
         <button class="row" data-id="${esc(item.id)}" type="button"><span><strong>${esc(item.title || item.id)}</strong><small>${esc(item.content || "")}</small></span>›</button>`).join("") || '<div class="empty">Nenhum registro.</div>'}</div></div>
-      <div class="card"><h3>Editar registro</h3><form id="recordForm"><label for="recordId">ID</label><input id="recordId" placeholder="vazio para criar"><div>${fields.map(([key, label, type]) => `<label for="f_${key}">${label}</label>${type === "textarea" ? `<textarea id="f_${key}"></textarea>` : `<input id="f_${key}">`}`).join("")}</div><div id="mediaPreview" class="media-preview hidden"></div><div class="actions"><button class="button primary-button">Salvar</button><button type="button" id="deleteCurrent" class="button danger-button hidden">Excluir</button><button type="button" id="clearCurrent" class="button">Limpar</button></div></form></div>
+      <div class="card"><h3>Editar registro</h3><form id="recordForm"><label for="recordId">ID</label><input id="recordId" placeholder="vazio para criar"><div>${fields.map(([key, label, type]) => `<label for="f_${key}">${label}</label>${type === "textarea" ? `<textarea id="f_${key}"></textarea>` : `<input id="f_${key}">`}`).join("")}</div><div class="upload-row"><label for="imageFile">Enviar imagem</label><input id="imageFile" type="file" accept="image/*"><small class="muted">Até 10 MB. A URL será preenchida automaticamente.</small></div><div class="upload-row"><label for="videoFile">Enviar vídeo</label><input id="videoFile" type="file" accept="video/mp4,video/webm,video/quicktime"><small class="muted">Até 120 MB. A URL será preenchida automaticamente.</small></div><div class="upload-row"><label for="videoThumbFile">Enviar miniatura do vídeo</label><input id="videoThumbFile" type="file" accept="image/*"><small class="muted">Opcional; preenche a URL da miniatura.</small></div><div id="mediaPreview" class="media-preview hidden"></div><div class="actions"><button class="button primary-button">Salvar</button><button type="button" id="deleteCurrent" class="button danger-button hidden">Excluir</button><button type="button" id="clearCurrent" class="button">Limpar</button></div></form></div>
     </div>`;
 
   items.forEach((item) => section.querySelector(`[data-id="${CSS.escape(item.id)}"]`)?.addEventListener("click", () => {
@@ -275,7 +294,27 @@ async function renderCollectionEditor(collectionName, sectionId, title, fields) 
     preview.innerHTML = renderMediaPreview(image, video);
     preview.classList.toggle("hidden", !safeMediaUrl(image) && !safeMediaUrl(video));
   }
-  [$("f_imageUrl"), $("f_videoUrl")].filter(Boolean).forEach((field) => field.addEventListener("input", updateMediaPreview));
+  [$("f_imageUrl"), $("f_videoUrl"), $("f_videoThumbUrl")].filter(Boolean).forEach((field) => field.addEventListener("input", updateMediaPreview));
+  async function bindUpload(inputId, targetId) {
+    const input = $(inputId);
+    if (!input || !$(targetId)) return;
+    input.addEventListener("change", async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      input.disabled = true;
+      try {
+        showStatus("Enviando mídia...", true);
+        $(targetId).value = await uploadMediaFile(file);
+        updateMediaPreview();
+        showStatus("Mídia enviada. Revise e clique em Salvar.", true);
+      } catch (error) {
+        showStatus(error instanceof Error ? error.message : "Falha ao enviar mídia.");
+      } finally { input.disabled = false; }
+    });
+  }
+  bindUpload("imageFile", "f_imageUrl");
+  bindUpload("videoFile", "f_videoUrl");
+  bindUpload("videoThumbFile", "f_videoThumbUrl");
   $("recordForm").addEventListener("submit", async (event) => {
     event.preventDefault();
     const id = $("recordId").value.trim() || crypto.randomUUID();

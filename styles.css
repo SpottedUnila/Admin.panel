@@ -64,6 +64,10 @@ input:focus, textarea:focus, select:focus { border-color: var(--cyan); }
 .media-preview { margin-top: 12px; padding: 10px; border: 1px solid #ffffff18; border-radius: 10px; background: #080d17; }
 .media-preview img, .media-preview video { display: block; width: 100%; max-height: 360px; object-fit: contain; border-radius: 7px; background: #000; }
 .media-preview a { display: block; color: var(--cyan); margin-top: 8px; word-break: break-all; font-size: 12px; }
+.upload-row { margin-top: 12px; padding: 10px; border: 1px dashed #ffffff2b; border-radius: 9px; background: #080d1766; }
+.upload-row label { margin-top: 0; }
+.upload-row input[type="file"] { padding: 8px; background: transparent; }
+.upload-row small { display: block; margin-top: 5px; }
 .user-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .user-actions .button { padding: 7px 10px; font-size: 12px; }
 
