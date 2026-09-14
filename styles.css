@@ -62,6 +62,10 @@ input:focus, textarea:focus, select:focus { border-color: var(--cyan); }
 .video-list-info { padding-top: 8px; }
 .video-list-info strong, .video-list-info small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .video-list-info small { color: var(--muted); margin-top: 4px; }
+#conhecaPage .card { max-width: 760px; }
+#conhecaPage .video-list-item video, #conhecaPage .video-list-item img, #conhecaPage .video-missing { max-height: 190px; }
+#conhecaPage .video-list-info strong, #conhecaPage .video-list-info small { white-space: normal; overflow-wrap: anywhere; }
+#conhecaPage .upload-row, #conhecaPage .media-preview { max-width: 620px; }
 .row { display: flex; justify-content: space-between; gap: 10px; width: 100%; text-align: left; background: var(--card-alt); border: 1px solid #ffffff12; color: var(--text); padding: 11px; border-radius: 8px; }
 .row:hover { border-color: var(--cyan); }
 .row strong, .row small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 440px; }
@@ -117,4 +121,15 @@ input:focus, textarea:focus, select:focus { border-color: var(--cyan); }
   .video-list-info strong, .video-list-info small { white-space: normal; overflow-wrap: anywhere; }
   .media-preview { padding: 7px; }
   .media-preview img, .media-preview video { max-height: 280px; }
+  #conhecaPage .card { width: min(100%, 430px); margin-inline: auto; padding: 11px; }
+  #conhecaPage .video-list { gap: 7px; }
+  #conhecaPage .video-row { padding: 7px; }
+  #conhecaPage .video-list-item video, #conhecaPage .video-list-item img, #conhecaPage .video-missing { height: 105px; max-height: 105px; }
+  #conhecaPage .video-list-info { padding-top: 6px; }
+  #conhecaPage .video-list-info strong { font-size: 14px; line-height: 1.25; }
+  #conhecaPage .video-list-info small { font-size: 12px; }
+  #conhecaPage form { width: min(100%, 430px); margin-inline: auto; }
+  #conhecaPage form input, #conhecaPage form textarea, #conhecaPage form select { width: 100%; }
+  #conhecaPage .upload-row, #conhecaPage .media-preview { width: 100%; max-width: 430px; }
+  #conhecaPage .media-preview img, #conhecaPage .media-preview video { max-height: 210px; }
 }
