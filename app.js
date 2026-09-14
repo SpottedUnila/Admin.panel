@@ -413,9 +413,15 @@ async function renderCollectionEditor(collectionName, sectionId, title, fields) 
   bindUpload("videoThumbFile", "f_videoThumbUrl");
   $("recordForm").addEventListener("submit", async (event) => {
     event.preventDefault();
-    const id = $("recordId").value.trim() || crypto.randomUUID();
+    const existingId = $("recordId").value.trim();
+    const isNewRecord = !existingId || !items.some((item) => item.id === existingId);
+    const id = existingId || crypto.randomUUID();
     const data = Object.fromEntries(fields.map(([key]) => [key, $(`f_${key}`).value.trim()]));
-    if (collectionName === "conhecaUnila") data.caption = data.title || "";
+    if (collectionName === "conhecaUnila") {
+      data.caption = data.title || "";
+      data.updatedAt = serverTimestamp();
+      if (isNewRecord) data.publishedAt = serverTimestamp();
+    }
     if (collectionName === "news") { data.timestamp = serverTimestamp(); data.createdAt = serverTimestamp(); }
     await saveRecord(collectionName, id, data);
   });
