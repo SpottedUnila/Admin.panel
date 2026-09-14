@@ -173,7 +173,7 @@ async function renderContent() {
           <input id="customId" placeholder="opcional">
           <label for="contentValue">Valor</label>
           <textarea id="contentValue"></textarea>
-          <div class="actions"><button class="button primary-button">Salvar</button><button type="button" id="clearContent" class="button">Limpar</button></div>
+          <div class="actions"><button class="button primary-button">Salvar</button><button type="button" id="deleteContent" class="button danger-button hidden">Excluir</button><button type="button" id="clearContent" class="button">Limpar</button></div>
         </form>
       </div>
     </div>`;
@@ -187,6 +187,7 @@ async function renderContent() {
       const id = row.dataset.id;
       $("contentId").value = id;
       $("contentValue").value = valueForEditor(state.cache[id]?.value);
+      $("deleteContent").classList.toggle("hidden", !state.cache[id]);
     }));
   };
 
@@ -198,7 +199,11 @@ async function renderContent() {
     await saveRecord("admin_content", id, { value: parseValue($("contentValue").value) });
   });
   $("clearContent").addEventListener("click", () => {
-    $("contentId").value = ""; $("customId").value = ""; $("contentValue").value = "";
+    $("contentId").value = ""; $("customId").value = ""; $("contentValue").value = ""; $("deleteContent").classList.add("hidden");
+  });
+  $("deleteContent").addEventListener("click", () => {
+    const id = $("contentId").value;
+    if (id && state.cache[id]) removeRecord("admin_content", id);
   });
   drawList();
 }
