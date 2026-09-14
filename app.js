@@ -358,9 +358,9 @@ async function renderCollectionEditor(collectionName, sectionId, title, fields) 
   const section = $(sectionId);
   const imageUpload = collectionName === "conhecaUnila" ? `<div class="upload-row"><label for="imageFile">Enviar imagem</label><input id="imageFile" type="file" accept="image/*"><small class="muted">Selecione uma imagem de até 10 MB. Ela será enviada primeiro e a URL será preenchida automaticamente.</small></div>` : "";
   section.innerHTML = `
-    <div class="grid">
-      <div class="card"><h3>${title} <span class="muted">${items.length}</span></h3><div class="video-list">${items.map((item, index) => `<div class="video-row" data-id="${esc(item.id)}" role="button" tabindex="0">${renderVideoListItem(item, index)}</div>`).join("") || '<div class="empty">Nenhum vídeo ou imagem cadastrado.</div>'}</div></div>
-      <div class="card"><h3>Editar ${collectionName === "conhecaUnila" ? "post" : "notícia"}</h3><p class="muted">Para Conheça a Unila, selecione a imagem e toque em Enviar no topo. Depois revise e salve.</p><form id="recordForm"><input id="recordId" type="hidden"><div class="actions form-top-actions"><button class="button primary-button" type="submit">Enviar</button></div>${imageUpload}<div class="upload-row"><label for="videoFile">Enviar vídeo</label><input id="videoFile" type="file" accept="video/mp4,video/webm,video/quicktime"><small class="muted">Até 120 MB. O nome do arquivo será preenchido automaticamente.</small></div><div class="upload-row"><label for="videoThumbFile">Enviar miniatura (opcional)</label><input id="videoThumbFile" type="file" accept="image/*"><small class="muted">A URL será preenchida automaticamente.</small></div><div id="mediaPreview" class="media-preview hidden"></div><div class="form-fields">${fields.map(([key, label, type]) => `<label for="f_${key}">${label}</label>${type === "textarea" ? `<textarea id="f_${key}"></textarea>` : `<input id="f_${key}">`}`).join("")}</div><div class="actions"><button type="button" id="deleteCurrent" class="button danger-button hidden">Excluir</button><button type="button" id="clearCurrent" class="button">Limpar</button></div></form></div>
+    <div class="collection-editor-stack">
+      ${m.group("editor")}
+      ${m.group("list")}
     </div>`;
 
   items.forEach((item) => section.querySelector(`[data-id="${CSS.escape(item.id)}"]`)?.addEventListener("click", () => {

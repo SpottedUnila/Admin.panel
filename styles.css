@@ -54,6 +54,8 @@ input:focus, textarea:focus, select:focus { border-color: var(--cyan); }
 .main-content { width: 100%; max-width: 1400px; min-width: 0; margin: auto; padding: 26px; }
 .page-header { display: flex; justify-content: space-between; gap: 15px; align-items: flex-start; margin-bottom: 20px; }
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+.collection-editor-stack { display: grid; gap: 15px; }
+.collection-editor-stack > .card { width: 100%; }
 .card { background: #101827dd; border: 1px solid #ffffff12; border-radius: 13px; padding: 17px; }
 .list { display: grid; gap: 7px; max-height: 620px; overflow: auto; }
 .video-list { display: grid; gap: 10px; max-height: 620px; overflow: auto; }
