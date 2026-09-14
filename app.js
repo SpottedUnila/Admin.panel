@@ -9,6 +9,7 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
   getDocs,
   getFirestore,
   limit,
@@ -140,6 +141,15 @@ async function readCollection(name) {
   return snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
 }
 
+async function readKnownContent() {
+  const ids = knownContentIds();
+  const records = await Promise.all(ids.map(async (id) => {
+    const snapshot = await getDoc(doc(db, "admin_content", id));
+    return snapshot.exists() ? { id: snapshot.id, ...snapshot.data() } : null;
+  }));
+  return records.filter(Boolean);
+}
+
 async function saveRecord(name, id, data, refresh = true) {
   await setDoc(doc(db, name, id), data, { merge: true });
   if (!refresh) return;
@@ -199,7 +209,7 @@ function renderVideoListItem(item, index = 0) {
   const title = recordVideoLabel(item, index);
   const name = recordVideoName(item, index);
   const preview = video ? `<video src="${esc(video)}"${poster ? ` poster="${esc(poster)}"` : ""} controls preload="metadata" playsinline></video>` : image ? `<img src="${esc(image)}" alt="${esc(title)}" loading="lazy">` : "<div class=\"video-missing\">Sem mídia</div>";
-  return `<div class="video-list-item">${preview}<div class="video-list-info"><strong>${esc(title)}</strong><small>${esc(name)}</small></div></div>`;
+  return `<div class="video-list-item">${preview}<div class="video-list-info"><strong>${esc(title)}</strong><small>${esc(name)}</small><button class="button danger-button inline-delete" type="button" data-delete-id="${esc(item.id)}">Excluir</button></div></div>`;
 }
 
 async function uploadMediaFile(file) {
@@ -220,7 +230,7 @@ async function uploadMediaFile(file) {
 }
 
 async function renderContent() {
-  const items = await readCollection("admin_content");
+  const items = await readKnownContent();
   state.cache = Object.fromEntries(items.map((item) => [item.id, item]));
   const buttons = [
     ["portal_unila", "Portal Oficial da Unila"], ["inscreva", "Portal Inscreva"],
@@ -318,6 +328,10 @@ async function renderCollectionEditor(collectionName, sectionId, title, fields) 
     updateMediaPreview();
     $("deleteCurrent").classList.remove("hidden");
   }));
+  section.querySelectorAll(".inline-delete").forEach((button) => button.addEventListener("click", (event) => {
+    event.stopPropagation();
+    removeRecord(collectionName, button.dataset.deleteId);
+  }));
   function updateMediaPreview() {
     const preview = $("mediaPreview");
     if (!preview) return;
@@ -405,14 +419,17 @@ async function renderModeration() {
   $("moderationPage").innerHTML = `
     <div class="grid">
       <div class="card"><h3>Bloquear usuário</h3><form id="banForm"><label for="banId">UID ou identificador</label><input id="banId" required><label for="banReason">Motivo</label><textarea id="banReason"></textarea><button class="button danger-button">Salvar bloqueio</button></form></div>
-      <div class="card"><h3>Denúncias</h3><div id="reports" class="list">Carregando...</div></div>
+      <div class="card"><h3>Denúncias</h3><p class="muted">Exclua uma denúncia depois de analisá-la.</p><div id="reports" class="list">Carregando...</div></div>
     </div>`;
   $("banForm").addEventListener("submit", async (event) => {
     event.preventDefault();
     await saveRecord("bannedUsers", $("banId").value.trim(), { reason: $("banReason").value.trim(), createdAt: serverTimestamp() });
   });
   const reports = await readCollection("ugc_reports");
-  $("reports").innerHTML = reports.map((item) => `<div class="row"><span><strong>${esc(item.type || "Denúncia")}</strong><small>${esc(item.text || item.reason || item.id)}</small></span></div>`).join("") || '<div class="empty">Nenhuma denúncia.</div>';
+  $("reports").innerHTML = reports.map((item) => `<div class="row report-row"><span><strong>${esc(item.type || "Denúncia")}</strong><small>${esc(item.text || item.reason || item.id)}</small></span><button class="button danger-button report-delete" type="button" data-report-id="${esc(item.id)}">Excluir</button></div>`).join("") || '<div class="empty">Nenhuma denúncia.</div>';
+  document.querySelectorAll("#reports .report-delete").forEach((button) => button.addEventListener("click", async () => {
+    await removeRecord("ugc_reports", button.dataset.reportId);
+  }));
 }
 
 $("loginForm").addEventListener("submit", async (event) => {

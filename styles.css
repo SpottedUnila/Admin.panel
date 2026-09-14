@@ -62,6 +62,9 @@ input:focus, textarea:focus, select:focus { border-color: var(--cyan); }
 .video-list-info { padding-top: 8px; }
 .video-list-info strong, .video-list-info small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .video-list-info small { color: var(--muted); margin-top: 4px; }
+.inline-delete { margin-top: 8px; padding: 7px 10px; font-size: 12px; }
+.report-row { align-items: center; }
+.report-delete { flex: 0 0 auto; padding: 7px 10px; font-size: 12px; }
 #conhecaPage .card { max-width: 760px; }
 #conhecaPage .video-list-item video, #conhecaPage .video-list-item img, #conhecaPage .video-missing { max-height: 190px; }
 #conhecaPage .video-list-info strong, #conhecaPage .video-list-info small { white-space: normal; overflow-wrap: anywhere; }
