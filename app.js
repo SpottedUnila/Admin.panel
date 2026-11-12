@@ -291,7 +291,8 @@ async function renderContent() {
         <label for="contentLanguage">Idioma</label>
         <select id="contentLanguage">${Object.entries(languageNames).map(([id, name]) => `<option value="${id}">${name}</option>`).join("")}</select>
         <label for="contentLabel">Texto exibido no botão</label>
-        <input id="contentLabel">
+        <textarea id="contentLabel" rows="3" aria-describedby="contentLabelHelp"></textarea>
+        <small id="contentLabelHelp" class="muted">Use Enter para separar linhas ou criar parágrafos no botão.</small>
         <label for="contentValue">Conteúdo ou link do botão</label>
         <textarea id="contentValue" rows="12"></textarea>
         <div class="actions"><button id="saveButtonContent" class="button primary-button" type="button">Salvar botão</button><button id="clearContent" class="button" type="button">Limpar</button></div>
