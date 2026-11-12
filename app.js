@@ -189,7 +189,8 @@ async function removeRecord(name, id) {
 }
 
 function valueForEditor(value) {
-  return typeof value === "object" ? JSON.stringify(value, null, 2) : String(value ?? "");
+  const text = typeof value === "object" ? JSON.stringify(value, null, 2) : String(value ?? "");
+  return text.replace(/\\r\\n/g, "\n").replace(/\\n/g, "\n").replace(/\r\n?/g, "\n");
 }
 
 function scrollToEditor(selector) {
