@@ -45,6 +45,7 @@ const CONTENT_KEYS = [
   "internet", "estude", "auxilio_estudantil", "saude_mental", "enem", "grupo_facebook",
   "noticias", "upa",
 ];
+const BANNER_KEYS = ["banner_text"];
 const DEFAULT_CONTENT = {
   portal_unila: "https://portal.unila.edu.br/",
   inscreva: "https://inscreva.unila.edu.br/",
@@ -153,7 +154,8 @@ function renderHome() {
 function knownContentIds() {
   const labelIds = LABEL_KEYS.flatMap((key) => LANGUAGES.map((language) => `button_label_${key}_${language}`));
   const contentIds = CONTENT_KEYS.flatMap((key) => LANGUAGES.map((language) => `button_content_${key}_${language}`));
-  return [...labelIds, ...contentIds];
+  const bannerIds = BANNER_KEYS.flatMap((key) => LANGUAGES.map((language) => `${key}_${language}`));
+  return [...labelIds, ...contentIds, ...bannerIds];
 }
 
 function parseValue(value) {
@@ -300,6 +302,35 @@ async function renderContent() {
         <p class="muted" style="margin-bottom:0">Os IDs técnicos ficam ocultos e são gerenciados automaticamente.</p>
       </div>
     </div>`;
+
+  const bannerCard = document.createElement("div");
+  bannerCard.className = "card";
+  bannerCard.style.marginTop = "15px";
+  bannerCard.innerHTML = `
+    <h3>Banner rolante da tela inicial</h3>
+    <p class="muted">Digite a frase que passará da direita para a esquerda abaixo da pesquisa. Deixe vazio para ocultar o banner.</p>
+    <label for="bannerLanguage">Idioma</label>
+    <select id="bannerLanguage">${Object.entries(languageNames).map(([id, name]) => `<option value="${id}">${name}</option>`).join("")}</select>
+    <label for="bannerText">Texto do banner</label>
+    <textarea id="bannerText" rows="3" placeholder="Ex.: Aviso importante para os estudantes..."></textarea>
+    <div class="actions"><button id="saveBanner" class="button primary-button" type="button">Salvar banner</button><button id="clearBanner" class="button" type="button">Limpar</button></div>`;
+  $("contentPage").appendChild(bannerCard);
+
+  const bannerLanguage = { value: "pt" };
+  async function loadBannerEditor() {
+    const id = `banner_text_${bannerLanguage.value}`;
+    const snapshot = await getDoc(doc(db, "admin_content", id));
+    $("bannerText").value = valueForEditor(snapshot.exists() ? snapshot.data().value : "");
+    $("bannerLanguage").value = bannerLanguage.value;
+  }
+  $("bannerLanguage").addEventListener("change", () => { bannerLanguage.value = $("bannerLanguage").value; void loadBannerEditor(); });
+  $("saveBanner").addEventListener("click", async () => {
+    await saveRecord("admin_content", `banner_text_${bannerLanguage.value}`, { value: $("bannerText").value }, false);
+    showStatus("Banner salvo com sucesso.", true);
+    openPage(state.currentPage);
+  });
+  $("clearBanner").addEventListener("click", () => { $("bannerText").value = ""; });
+  void loadBannerEditor();
 
   function idsFor(button, language) {
     const [key, , labelKey = key] = button;
