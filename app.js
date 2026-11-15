@@ -143,9 +143,11 @@ function openPage(page) {
   if (page === "content") renderContent();
   if (page === "news") renderCollectionEditor("news", "newsPage", "Notícias", [
     ["title", "Título do vídeo"], ["videoName", "Nome do vídeo"], ["content", "Descrição", "textarea"], ["videoUrl", "URL do vídeo"], ["videoThumbUrl", "URL da miniatura"],
+    ["externalUrl", "Link externo da notícia (opcional)"], ["shareText", "Texto personalizado para compartilhar (opcional)", "textarea"],
   ]);
   if (page === "conheca") renderCollectionEditor("conhecaUnila", "conhecaPage", "Conheça a Unila", [
     ["title", "Título do post"], ["videoName", "Nome do arquivo"], ["content", "Descrição", "textarea"], ["imageUrl", "URL da imagem"], ["videoUrl", "URL do vídeo"], ["videoThumbUrl", "URL da miniatura"],
+    ["externalUrl", "Link externo do post (opcional)"], ["shareText", "Texto personalizado para compartilhar (opcional)", "textarea"],
   ]);
   if (page === "users") renderUsers();
   if (page === "moderation") renderModeration();
