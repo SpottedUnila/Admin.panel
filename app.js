@@ -46,6 +46,7 @@ const CONTENT_KEYS = [
   "noticias", "upa",
 ];
 const BANNER_KEYS = ["banner_text"];
+const CHAT_LABELS = { pt: "💬 Chat", fr: "💬 Chat", es: "💬 Chat" };
 const DEFAULT_CONTENT = {
   portal_unila: "https://portal.unila.edu.br/",
   inscreva: "https://inscreva.unila.edu.br/",
@@ -60,7 +61,7 @@ const DEFAULT_CONTENT = {
   emergencia: "Polícia Militar: 190\nSAMU (Ambulância): 192\nBombeiros: 193\n\nHospital Municipal: (45) 2105-4100\nGuarda Municipal: (45) 2105-5100\nDelegacia da Mulher: (45) 3521-9200\nDefesa Civil: 199",
   enderecos: "Unila - Campus PTI\nAv. Tancredo Neves, 6731 - PTI, Foz do Iguaçu - PR\n\nUnila - Campus Juarez Távora\nAv. Silvio Américo Sasdelli, 1000 - Vila A, Foz do Iguaçu - PR\n\nUnila - Campus Jardim Universitário (JU)\nAv. Tarquínio Joslin dos Santos, 1000 - Lot. Universitário das Américas, Foz do Iguaçu - PR\n\nUnila - Campus Integração\nAv. Tancredo Neves, 3147 - Foz do Iguaçu - PR",
   ru: "RU PTI: Segunda a Sexta (11:00 - 14:00 e 17:30 - 20:00)\nRU JU: Segunda a Sexta (11:00 - 14:00 e 17:30 - 20:00)\n\nPreço para Estudantes: R$ 3,50\nPreço para Servidores: R$ 12,00",
-  dev: "Equipe Spotted Unila\nContato: universecreativepixel@gmail.com",
+  dev: "Equipe Vida Unileira\nContato: universecreativepixel@gmail.com",
   internet: "Rede: Unila-WIFI\nLogin: Seu CPF ou E-mail Institucional\nSenha: A mesma senha do SIGAA",
   estude: "Ingresso para Brasileiros: Via ENEM/SISU\nIngresso para Estrangeiros: Seleção Internacional Própria\n\nCursos: Mais de 29 opções de graduação.\n\nMais informações: portal.unila.edu.br/ingresso",
   auxilio_estudantil: "https://portal.unila.edu.br/prae/assistencia-estudantil/auxilios",
@@ -108,6 +109,18 @@ function firebaseErrorMessage(error) {
     "auth/invalid-email": "O formato do e-mail é inválido.",
   };
   return messages[error?.code] || `Não foi possível entrar. Código: ${error?.code || "desconhecido"}.`;
+}
+
+async function migrateLegacyChatLabels() {
+  await Promise.all(LANGUAGES.map(async (language) => {
+    const id = `button_label_chatMenu_${language}`;
+    const reference = doc(db, "admin_content", id);
+    const snapshot = await getDoc(reference);
+    const currentValue = String(snapshot.data()?.value || "");
+    if (snapshot.exists() && /spotted/i.test(currentValue)) {
+      await setDoc(reference, { value: CHAT_LABELS[language] }, { merge: true });
+    }
+  }));
 }
 
 function openPage(page) {
@@ -265,6 +278,7 @@ async function renderContent() {
   const items = await readKnownContent();
   state.cache = Object.fromEntries(items.map((item) => [item.id, item]));
   const buttons = [
+    ["chatMenu", "💬 Chat", "chatMenu"],
     ["portal_unila", "Portal Oficial da Unila", "portal"], ["inscreva", "Portal Inscreva", "inscreva"],
     ["sigaa", "Sistema Acadêmico SIGAA", "sigaa"], ["email", "E-mail Institucional", "email"],
     ["google", "Pesquisa Google", "google"], ["instagram", "Instagram Unila", "instagram"], ["facebook", "Facebook Unila", "facebook"],
@@ -276,7 +290,7 @@ async function renderContent() {
     ["academicGoals", "Meta Acadêmica", "academicGoals"], ["auxilio_estudantil", "Auxílio Estudantil", "studentAid"], ["saude_mental", "Saúde Mental", "mentalHealth"],
     ["enem", "ENEM", "enem"], ["noticias", "Notícias", "news"], ["conheca", "Conheça a Unila", "conheca"],
     ["desapega", "Achados e Perdidos e Desapega", "desapega"], ["upa", "Hospitais de Emergência 24h (UPA)", "upa"],
-  ].filter(([key]) => CONTENT_KEYS.includes(key));
+  ].filter(([key]) => CONTENT_KEYS.includes(key) || key === "chatMenu");
   const languageNames = { pt: "Português", fr: "Français", es: "Español" };
   const selectedKey = { value: buttons[0][0] };
   const selectedLanguage = { value: "pt" };
@@ -547,7 +561,12 @@ onAuthStateChanged(auth, (user) => {
     $("loginView").classList.add("hidden");
     $("panelView").classList.remove("hidden");
     $("account").textContent = user.email;
-    openPage("home");
+    migrateLegacyChatLabels()
+      .then(() => openPage("home"))
+      .catch((error) => {
+        console.error("Não foi possível corrigir o rótulo antigo do Chat:", error);
+        openPage("home");
+      });
   } else {
     $("loginView").classList.remove("hidden");
     $("panelView").classList.add("hidden");
