@@ -31,7 +31,7 @@ const FIREBASE_CONFIG = {
 const ADMIN_EMAIL = "fernando2018a1986@gmail.com";
 const CLOUDINARY_CLOUD_NAME = "dthnn5flq";
 const CLOUDINARY_UPLOAD_PRESET = "ml_default";
-const LANGUAGES = ["pt", "fr", "es"];
+const LANGUAGES = ["pt", "fr", "es", "en"];
 const LABEL_KEYS = [
   "home", "podcast", "music", "chatMenu", "portal", "inscreva", "sigaa", "email",
   "google", "instagram", "facebook", "library", "intercampus", "notices", "emergency",
@@ -46,7 +46,13 @@ const CONTENT_KEYS = [
   "noticias", "upa",
 ];
 const BANNER_KEYS = ["banner_text"];
-const CHAT_LABELS = { pt: "💬 Chat", fr: "💬 Chat", es: "💬 Chat" };
+const CHAT_LABELS = { pt: "💬 Chat", fr: "💬 Chat", es: "💬 Chat", en: "💬 Chat" };
+const ENGLISH_DEFAULT_LABELS = {
+  chatMenu: "💬 Chat", portal_unila: "🌐 Official UNILA Portal", inscreva: "🎓 Inscreva Portal", sigaa: "📚 SIGAA Academic System", email: "📧 Institutional E-mail",
+  google: "🔎 Google Search", instagram: "Instagram UNILA", facebook: "📘 UNILA Facebook", biblioteca: "📖 UNILA Library", intercampi: "🚌 Intercampus Shuttle", editais: "📄 Official Notices",
+  emergencia: "🚨 Emergency Numbers", enderecos: "🏫 Campus Addresses", ru: "🍽️ University Restaurants", grupo_facebook: "👥 Facebook Group", dev: "👨‍💻 Developer",
+  internet: "🌐 UNILA Internet", estude: "🎓 Study at UNILA", auxilio_estudantil: "🎓 Student Aid", saude_mental: "🧠 Mental Health", enem: "📝 ENEM Participant Portal", noticias: "📰 News", upa: "24-hour Emergency Care Units (UPA)"
+};
 const DEFAULT_CONTENT = {
   portal_unila: "https://portal.unila.edu.br/",
   inscreva: "https://inscreva.unila.edu.br/",
@@ -70,6 +76,15 @@ const DEFAULT_CONTENT = {
   grupo_facebook: "https://www.facebook.com/groups/unila/",
   noticias: "https://portal.unila.edu.br/noticias",
   upa: "UPA João Samek (Vila A): (45) 3524-8800\nUPA Morumbi: (45) 3521-1350\n\nEm emergências, ligue 192 (SAMU).",
+};
+const ENGLISH_DEFAULT_CONTENT = {
+  emergencia: "Military Police: 190\nSAMU (Ambulance): 192\nFire Department: 193\n\nMunicipal Hospital: (45) 2105-4100\nMunicipal Guard: (45) 2105-5100\nWomen's Police Station: (45) 3521-9200\nCivil Defense: 199\n\nFederal Police: (45) 3522-1174\nFederal Highway Police: (45) 3576-1400\n\nPrae-UNILA: +55 45 3522-9983\nPrograd-UNILA: +55 (45) 3522-9766\n\nCrime Hotline: 181\nChild Protection Council: (45) 3521-1112\nPoison Control Center: 0800 722 6001\n\n⚠ In serious emergencies, call immediately.",
+  enderecos: "UNILA - PTI Campus\nAv. Tancredo Neves, 6731 - PTI, Foz do Iguaçu - PR\n\nUNILA - Juarez Távora Campus\nAv. Silvio Américo Sasdelli, 1000 - Vila A, Foz do Iguaçu - PR\n\nUNILA - Jardim Universitário Campus (JU)\nAv. Tarquínio Joslin dos Santos, 1000 - Lot. Universitário das Américas, Foz do Iguaçu - PR\n\nUNILA - Integração Campus\nAv. Tancredo Neves, 3147 - Foz do Iguaçu - PR",
+  ru: "RU PTI: Monday to Friday (11:00–14:00 and 17:30–20:00)\nRU JU: Monday to Friday (11:00–14:00 and 17:30–20:00)\n\nStudent price: R$ 3.50\nStaff price: R$ 12.00\n\n⚠ Check holidays and special schedules on the official portal.",
+  dev: "Vida Unileira Team\nContact: universecreativepixel@gmail.com",
+  internet: "Network: UNILA-WIFI\nLogin: Your CPF or institutional e-mail\nPassword: The same password used for SIGAA\n\n⚠ If you have problems, contact your campus IT support.",
+  estude: "Admission for Brazilian applicants: via ENEM/SISU\nAdmission for international applicants: UNILA's own selection process\n\nPrograms: More than 29 undergraduate options.\n\nFor more information, visit: portal.unila.edu.br/ingresso",
+  upa: "UPA João Samek (Vila A): (45) 3524-8800\nUPA Morumbi: (45) 3521-1350\n\n⚠ In life-threatening emergencies, call 192 (SAMU)."
 };
 
 const app = initializeApp(FIREBASE_CONFIG);
@@ -126,7 +141,7 @@ async function migrateLegacyChatLabels() {
 function openPage(page) {
   const pageInfo = {
     home: ["Visão geral", "Conteúdos essenciais do aplicativo."],
-    content: ["Textos e botões", "IDs button_label_* e button_content_* em PT, FR e ES."],
+    content: ["Textos e botões", "IDs button_label_* e button_content_* em PT, FR, ES e EN."],
     news: ["Notícias", "Publicações exibidas no aplicativo."],
     conheca: ["Conheça a Unila", "Publicações da coleção conhecaUnila."],
     users: ["Usuários", "Visualize usuários, nicks e bloqueios globais."],
@@ -157,8 +172,8 @@ function renderHome() {
   $("homePage").innerHTML = `
     <div class="metric-grid">
       <div class="metric"><span class="muted">Conta</span><strong>ADMIN</strong></div>
-      <div class="metric"><span class="muted">Rótulos disponíveis</span><strong>${LABEL_KEYS.length * 3}</strong></div>
-      <div class="metric"><span class="muted">Conteúdos disponíveis</span><strong>${CONTENT_KEYS.length * 3}</strong></div>
+      <div class="metric"><span class="muted">Rótulos disponíveis</span><strong>${LABEL_KEYS.length * LANGUAGES.length}</strong></div>
+      <div class="metric"><span class="muted">Conteúdos disponíveis</span><strong>${CONTENT_KEYS.length * LANGUAGES.length}</strong></div>
     </div>
     <div class="card" style="margin-top:15px">
       <h3>Segurança</h3>
@@ -293,7 +308,7 @@ async function renderContent() {
     ["enem", "ENEM", "enem"], ["noticias", "Notícias", "news"], ["conheca", "Conheça a Unila", "conheca"],
     ["desapega", "Achados e Perdidos e Desapega", "desapega"], ["upa", "Hospitais de Emergência 24h (UPA)", "upa"],
   ].filter(([key]) => CONTENT_KEYS.includes(key) || key === "chatMenu");
-  const languageNames = { pt: "Português", fr: "Français", es: "Español" };
+  const languageNames = { pt: "Português", fr: "Français", es: "Español", en: "English" };
   const selectedKey = { value: buttons[0][0] };
   const selectedLanguage = { value: "pt" };
 
@@ -369,8 +384,10 @@ async function renderContent() {
     if (selection !== `${selectedKey.value}:${selectedLanguage.value}`) return;
     const [labelRecord, contentRecord] = records;
     const savedContent = String(contentRecord?.value ?? "");
-    $("contentLabel").value = String(labelRecord?.value || fallbackLabel);
-    $("contentValue").value = valueForEditor(savedContent.trim() ? savedContent : (DEFAULT_CONTENT[key] || ""));
+    const defaultLabel = selectedLanguage.value === "en" ? (ENGLISH_DEFAULT_LABELS[key] || fallbackLabel) : fallbackLabel;
+    const defaultContent = selectedLanguage.value === "en" ? (ENGLISH_DEFAULT_CONTENT[key] ?? DEFAULT_CONTENT[key]) : DEFAULT_CONTENT[key];
+    $("contentLabel").value = String(labelRecord?.value || defaultLabel);
+    $("contentValue").value = valueForEditor(savedContent.trim() ? savedContent : (defaultContent || ""));
     $("contentLanguage").value = selectedLanguage.value;
   }
   function drawList() {
